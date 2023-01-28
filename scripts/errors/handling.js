@@ -5,7 +5,7 @@ export function incorrectId(e, msg) {
     console.trace();
 }
 
-export function topTenTtmError(e, msg) {
-    msg.reply("Something went wrong getting the top 10 for Time to max.");
+export function topTenError(e, msg) {
+    msg.reply("Something went wrong getting the top 10 for this metric.");
     console.trace();
 }

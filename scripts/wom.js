@@ -1,6 +1,11 @@
 import { WOMClient } from "@wise-old-man/utils";
-import { incorrectId, topTenTtmError } from "./errors/handling.js";
-import { jsonToOutput, top5members } from "./utils/utils.js";
+import { incorrectId, topTenError } from "./errors/handling.js";
+import {
+    buildMessage,
+    jsonToOutput,
+    sortMembershipsByMetric,
+    top5members,
+} from "./utils/utils.js";
 
 const womClient = new WOMClient();
 
@@ -31,29 +36,28 @@ export async function getResults(msg, id, type) {
 }
 
 export async function getGroupCompetitions(msg, groupId) {
-    const competitions = await womClient.groups.getGroupCompetitions(groupId);
-    console.log(competitions);
+    try {
+        const competitions = await womClient.groups.getGroupCompetitions(
+            groupId
+        );
+        console.log(competitions);
+    } catch (e) {
+        msg.reply("Something went wrong.");
+        console.trace();
+    }
 }
 
-export async function getTopTenTtm(msg, groupId) {
+export async function getTopTen(msg, groupId, metric) {
     try {
-        let message =
-            "The following players are the members of Regeneration that are closest to maxing:\n";
         const memberships = (await womClient.groups.getGroupDetails(groupId))
             .memberships;
-        const sortedMemberships = memberships
-            .sort((a, b) => a.player.ttm - b.player.ttm)
-            .filter((a) => a.player.ttm !== 0)
-            .slice(0, 10);
-        message += `\`\`\`${sortedMemberships
-            .map((m, i) => {
-                return `${i + 1}. ${
-                    m.player.displayName
-                }: ${m.player.ttm.toFixed(2)} hours left.`;
-            })
-            .join("\n")}\`\`\``;
+        const sortedMemberships = sortMembershipsByMetric(
+            memberships,
+            metric
+        ).slice(0, 10);
+        const message = buildMessage(sortedMemberships, metric);
         msg.reply(message);
     } catch (e) {
-        topTenTtmError(e, msg);
+        topTenError(e, msg);
     }
 }
