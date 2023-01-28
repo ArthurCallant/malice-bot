@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
-import { getGroupCompetitions, getResults } from "./scripts/wom.js";
+import {
+    getGroupCompetitions,
+    getResults,
+    getTopTenTtm,
+} from "./scripts/wom.js";
 
 const client = new Client({
     intents: [
@@ -29,6 +33,9 @@ client.on("messageCreate", (msg) => {
             break;
         case "comps":
             getGroupCompetitions(msg, 755);
+            break;
+        case "top10ttm":
+            getTopTenTtm(msg, 4089);
             break;
         default:
             break;

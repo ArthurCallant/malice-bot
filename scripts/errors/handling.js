@@ -4,3 +4,8 @@ export function incorrectId(e, msg) {
     );
     console.trace();
 }
+
+export function topTenTtmError(e, msg) {
+    msg.reply("Something went wrong getting the top 10 for Time to max.");
+    console.trace();
+}

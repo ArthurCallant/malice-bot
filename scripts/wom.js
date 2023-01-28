@@ -1,5 +1,5 @@
 import { WOMClient } from "@wise-old-man/utils";
-import { incorrectId } from "./errors/handling.js";
+import { incorrectId, topTenTtmError } from "./errors/handling.js";
 import { jsonToOutput, top5members } from "./utils/utils.js";
 
 const womClient = new WOMClient();
@@ -33,4 +33,27 @@ export async function getResults(msg, id, type) {
 export async function getGroupCompetitions(msg, groupId) {
     const competitions = await womClient.groups.getGroupCompetitions(groupId);
     console.log(competitions);
+}
+
+export async function getTopTenTtm(msg, groupId) {
+    try {
+        let message =
+            "The following players are the members of Regeneration that are closest to maxing:\n";
+        const memberships = (await womClient.groups.getGroupDetails(groupId))
+            .memberships;
+        const sortedMemberships = memberships
+            .sort((a, b) => a.player.ttm - b.player.ttm)
+            .filter((a) => a.player.ttm !== 0)
+            .slice(0, 10);
+        message += `\`\`\`${sortedMemberships
+            .map((m, i) => {
+                return `${i + 1}. ${
+                    m.player.displayName
+                }: ${m.player.ttm.toFixed(2)} hours left.`;
+            })
+            .join("\n")}\`\`\``;
+        msg.reply(message);
+    } catch (e) {
+        topTenTtmError(e, msg);
+    }
 }
