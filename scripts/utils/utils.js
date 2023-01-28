@@ -3,20 +3,16 @@ export function numberWithCommas(x) {
 }
 
 export function top5members(json) {
-    return json["participations"]
-        .sort(function (playerA, playerB) {
-            return playerA["progress"] > playerB["progress"];
-        })
-        .filter((p, i) => {
-            return i <= 4;
-        });
+    return [...json["participations"]]
+        .sort((playerA, playerB) => playerA["progress"] > playerB["progress"])
+        .slice(0, 5);
 }
 
-export async function jsonToOutput(json) {
-    return await json.map((p, i) => {
-        const output = `RANK ${i + 1}: ${
+export function jsonToOutput(json, type) {
+    let suffix = type === "sotw" ? "exp" : "kills";
+    return json.map((p, i) => {
+        return `RANK ${i + 1}: ${
             p["player"]["displayName"]
-        } with ${numberWithCommas(p["progress"]["gained"])} exp`;
-        return output;
+        } with ${numberWithCommas(p["progress"]["gained"])} ${suffix}`;
     });
 }

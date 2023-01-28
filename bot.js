@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
-import { getSotwResults, getBotwResults } from "./scripts/wom.js";
+import { getGroupCompetitions, getResults } from "./scripts/wom.js";
 
 const client = new Client({
     intents: [
@@ -22,15 +22,21 @@ client.on("messageCreate", (msg) => {
     const command = args.shift().toLowerCase();
     switch (command) {
         case "sotw":
-            getSotwResults(msg, args[0]);
+            getResults(msg, args[0], "sotw");
             break;
         case "botw":
-            getBotwResults(msg, args[0]);
+            getResults(msg, args[0], "botw");
+            break;
+        case "comps":
+            getGroupCompetitions(msg, 755);
             break;
         default:
             break;
     }
 });
 
-//make sure this line is the last line
-client.login(process.env.CLIENT_TOKEN); //login bot using token
+//
+//
+//
+//KEEP LAST
+client.login(process.env.CLIENT_TOKEN);
