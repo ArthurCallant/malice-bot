@@ -1,4 +1,5 @@
 import { WOMClient } from "@wise-old-man/utils";
+import { Skills } from "../constants/enums.js";
 import { incorrectId, playerError, topTenError } from "./errors/handling.js";
 import {
     buildMessage,
@@ -81,13 +82,41 @@ export async function getPlayerStats(msg, playerName) {
                     )}${skill.level.toString().padStart(4)} ${numberWithCommas(
                         skill.experience
                     ).padStart(12)} Exp   Rank ${numberWithCommas(
-                        skill.rank.toString()
+                        skill.rank
                     ).padStart(11)}   ${skill.ehp
                         .toFixed(2)
                         .padStart(8)} EHP\n`;
                 });
                 output += "```";
                 msg.reply(output);
+            });
+    } catch (e) {
+        playerError(e, msg);
+    }
+}
+
+export async function getPlayerSkillStat(msg, metric, playerName) {
+    try {
+        const displayName = (
+            await womClient.players.getPlayerDetails(playerName)
+        ).displayName;
+        const playerStat = await womClient.players
+            .getPlayerDetails(playerName)
+            .then((json) => {
+                const array = Object.values(json.latestSnapshot.data.skills);
+                const skillStats = array.filter((skill) => {
+                    return skill.metric === metric;
+                })[0];
+                let message = `Here are the ${
+                    Skills[toCapitalCase(skillStats.metric)]
+                } stats for ${displayName}:\n\`\`\`Level ${
+                    skillStats.level
+                }  ${numberWithCommas(
+                    skillStats.experience
+                )} Exp  Rank ${numberWithCommas(
+                    skillStats.rank
+                )}  ${skillStats.ehp.toFixed(2)} EHP\`\`\``;
+                msg.reply(message);
             });
     } catch (e) {
         playerError(e, msg);

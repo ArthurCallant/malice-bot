@@ -3,6 +3,7 @@ dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
 import {
     getGroupCompetitions,
+    getPlayerSkillStat,
     getPlayerStats,
     getResults,
     getTopTen,
@@ -49,8 +50,12 @@ client.on("messageCreate", (msg) => {
             break;
         case "stats":
             const playerName = args.join(" ").toString();
-            // console.log(playerName);
             getPlayerStats(msg, playerName);
+            break;
+        case "stat":
+            const skill = args.shift().toLowerCase();
+            const player = args.join(" ").toString();
+            getPlayerSkillStat(msg, skill, player);
             break;
         default:
             break;
