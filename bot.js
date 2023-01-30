@@ -3,6 +3,7 @@ dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
 import {
     getGroupCompetitions,
+    getPlayerBossStat,
     getPlayerSkillStat,
     getPlayerStats,
     getResults,
@@ -26,6 +27,9 @@ client.on("messageCreate", (msg) => {
     if (msg.author.bot) return;
     const args = msg.content.slice(1).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
+    let playerName;
+    let skill;
+    let boss;
     switch (command) {
         case "sotw":
             getResults(msg, args[0], "sotw");
@@ -49,14 +53,18 @@ client.on("messageCreate", (msg) => {
             getTopTen(msg, process.env.GROUP_ID, "ehp");
             break;
         case "stats":
-            const playerName = args.join(" ").toString();
+            playerName = args.join(" ").toString();
             getPlayerStats(msg, playerName);
             break;
-        case "stat":
-            const skill = args.shift().toLowerCase();
-            const player = args.join(" ").toString();
-            getPlayerSkillStat(msg, skill, player);
+        case "lvl":
+            skill = args.shift().toLowerCase();
+            playerName = args.join(" ").toString();
+            getPlayerSkillStat(msg, skill, playerName);
             break;
+        case "kills":
+            boss = args.shift().toLowerCase();
+            playerName = args.join(" ").toString();
+            getPlayerBossStat(msg, boss, playerName);
         default:
             break;
     }

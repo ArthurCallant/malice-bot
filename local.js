@@ -3,7 +3,7 @@ import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
 
 const womClient = new WOMClient();
 
-const playerName = "Regen Matt";
+const playerName = "Belgiska";
 const metric = "slayer";
 // let output = `Here are the stats for ${playerName}:\n`;
 
@@ -23,18 +23,7 @@ const metric = "slayer";
 //     });
 
 await womClient.players.getPlayerDetails(playerName).then((json) => {
-    const array = Object.values(json.latestSnapshot.data.skills);
-    const skillStats = array.filter((skill) => {
-        return skill.metric === metric;
-    })[0];
-    let message = `Here are the ${toCapitalCase(
-        skillStats.metric
-    )} stats for Belgiska:\n\`\`\`Level ${skillStats.level}  ${numberWithCommas(
-        skillStats.experience
-    )} Exp  Rank ${numberWithCommas(skillStats.rank)}  ${skillStats.ehp.toFixed(
-        2
-    )} EHP\`\`\``;
-    console.log(message);
+    console.log(json.latestSnapshot.data.bosses);
 });
 
 // console.log(output);

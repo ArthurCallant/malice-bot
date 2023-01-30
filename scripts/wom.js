@@ -1,5 +1,5 @@
 import { WOMClient } from "@wise-old-man/utils";
-import { Skills } from "../constants/enums.js";
+import { Bosses, Skills } from "../constants/enums.js";
 import { incorrectId, playerError, topTenError } from "./errors/handling.js";
 import {
     buildMessage,
@@ -116,6 +116,32 @@ export async function getPlayerSkillStat(msg, metric, playerName) {
                 )} Exp  Rank ${numberWithCommas(
                     skillStats.rank
                 )}  ${skillStats.ehp.toFixed(2)} EHP\`\`\``;
+                msg.reply(message);
+            });
+    } catch (e) {
+        playerError(e, msg);
+    }
+}
+
+export async function getPlayerBossStat(msg, metric, playerName) {
+    try {
+        const displayName = (
+            await womClient.players.getPlayerDetails(playerName)
+        ).displayName;
+        const playerStat = await womClient.players
+            .getPlayerDetails(playerName)
+            .then((json) => {
+                const array = Object.values(json.latestSnapshot.data.bosses);
+                const bossStats = array.filter((boss) => {
+                    return boss.metric === metric;
+                })[0];
+                let message = `Here are the ${
+                    Bosses[bossStats.metric]
+                } stats for ${displayName}:\n\`\`\`Kills or completions: ${numberWithCommas(
+                    bossStats.kills
+                )}  Rank ${numberWithCommas(
+                    bossStats.rank
+                )}  ${bossStats.ehb.toFixed(2)} EHB\`\`\``;
                 msg.reply(message);
             });
     } catch (e) {
