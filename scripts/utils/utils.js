@@ -17,6 +17,10 @@ export function jsonToOutput(json, type) {
     });
 }
 
+export function toCapitalCase(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 export function sortMembershipsByMetric(memberships, metric) {
     if (metric === "ttm") {
         return memberships
@@ -39,36 +43,44 @@ export function buildMessage(sortedMemberships, metric) {
         message += "are closest to maxing:\n";
         message += `\`\`\`${sortedMemberships
             .map((m, i) => {
-                return `${i + 1}. ${
-                    m.player.displayName
-                }: ${m.player.ttm.toFixed(2)} hours left.`;
+                return `${((i + 1).toString() + ".").padEnd(
+                    3
+                )} ${m.player.displayName.padEnd(12)}: ${(
+                    m.player.ttm.toFixed(2) + " hours left."
+                ).padStart(18)}`;
             })
             .join("\n")}\`\`\``;
     } else if (metric === "exp") {
         message += "have the highest amount of Exp:\n";
         message += `\`\`\`${sortedMemberships
             .map((m, i) => {
-                return `${i + 1}. ${m.player.displayName}: ${numberWithCommas(
-                    m.player.exp
-                )} Exp.`;
+                return `${((i + 1).toString() + ".").padEnd(
+                    3
+                )} ${m.player.displayName.padEnd(12)}: ${(
+                    numberWithCommas(m.player.exp) + " Exp."
+                ).padStart(18)}`;
             })
             .join("\n")}\`\`\``;
     } else if (metric === "ehb") {
         message += "have the highest amount of Efficient Hours Bossed:\n";
         message += `\`\`\`${sortedMemberships
             .map((m, i) => {
-                return `${i + 1}. ${
-                    m.player.displayName
-                }: ${m.player.ehb.toFixed(2)} EHB.`;
+                return `${((i + 1).toString() + ".").padEnd(
+                    3
+                )} ${m.player.displayName.padEnd(12)}: ${(
+                    m.player.ehb.toFixed(2) + " EHB."
+                ).padStart(15)}`;
             })
             .join("\n")}\`\`\``;
     } else if (metric === "ehp") {
         message += "have the highest amount of Efficient Hours Played:\n";
         message += `\`\`\`${sortedMemberships
             .map((m, i) => {
-                return `${i + 1}. ${
-                    m.player.displayName
-                }: ${m.player.ehp.toFixed(2)} EHP.`;
+                return `${((i + 1).toString() + ".").padEnd(
+                    3
+                )} ${m.player.displayName.padEnd(12)}: ${(
+                    m.player.ehp.toFixed(2) + " EHP."
+                ).padStart(15)}`;
             })
             .join("\n")}\`\`\``;
     }

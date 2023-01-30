@@ -1,10 +1,12 @@
 import { WOMClient } from "@wise-old-man/utils";
-import { incorrectId, topTenError } from "./errors/handling.js";
+import { incorrectId, playerError, topTenError } from "./errors/handling.js";
 import {
     buildMessage,
     jsonToOutput,
     sortMembershipsByMetric,
     top5members,
+    numberWithCommas,
+    toCapitalCase,
 } from "./utils/utils.js";
 
 const womClient = new WOMClient();
@@ -59,5 +61,35 @@ export async function getTopTen(msg, groupId, metric) {
         msg.reply(message);
     } catch (e) {
         topTenError(e, msg);
+    }
+}
+
+export async function getPlayerStats(msg, playerName) {
+    try {
+        const displayName = (
+            await womClient.players.getPlayerDetails(playerName)
+        ).displayName;
+        const playerDetails = await womClient.players
+            .getPlayerDetails(playerName)
+            .then((json) => {
+                let output = `Here are the stats for ${displayName}:\n`;
+                const array = Object.values(json.latestSnapshot.data.skills);
+                output += "```";
+                array.forEach((skill) => {
+                    output += `${(toCapitalCase(skill.metric) + ": ").padEnd(
+                        14
+                    )}${skill.level.toString().padStart(4)} ${numberWithCommas(
+                        skill.experience
+                    ).padStart(12)} Exp   Rank ${numberWithCommas(
+                        skill.rank.toString()
+                    ).padStart(11)}   ${skill.ehp
+                        .toFixed(2)
+                        .padStart(8)} EHP\n`;
+                });
+                output += "```";
+                msg.reply(output);
+            });
+    } catch (e) {
+        playerError(e, msg);
     }
 }
