@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
 import {
+    getCommands,
     getGroupCompetitions,
     getPlayerBossStat,
     getPlayerSkillStat,
@@ -31,6 +32,9 @@ client.on("messageCreate", (msg) => {
     let skill;
     let boss;
     switch (command) {
+        case "help":
+            getCommands(msg);
+            break;
         case "sotw":
             getResults(msg, args[0], "sotw");
             break;
@@ -56,15 +60,21 @@ client.on("messageCreate", (msg) => {
             playerName = args.join(" ").toString();
             getPlayerStats(msg, playerName);
             break;
+        // Response body is too big, can't split it up, so unusable
+        // case "bosses":
+        //     playerName = args.join(" ").toString();
+        //     getPlayerBossStats(msg, playerName);
+        //     break;
         case "lvl":
             skill = args.shift().toLowerCase();
             playerName = args.join(" ").toString();
             getPlayerSkillStat(msg, skill, playerName);
             break;
-        case "kills":
+        case "kc":
             boss = args.shift().toLowerCase();
             playerName = args.join(" ").toString();
             getPlayerBossStat(msg, boss, playerName);
+            break;
         default:
             break;
     }
