@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
 import {
+    getClanRankCalculator,
     getCommands,
     getGroupCompetitions,
     getPlayerBossStat,
@@ -34,6 +35,9 @@ client.on("messageCreate", (msg) => {
     switch (command) {
         case "help":
             getCommands(msg);
+            break;
+        case "calc":
+            getClanRankCalculator(msg);
             break;
         case "sotw":
             getResults(msg, args[0], "sotw");

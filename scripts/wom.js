@@ -1,6 +1,11 @@
 import { WOMClient } from "@wise-old-man/utils";
 import { Bosses, Skills } from "../constants/enums.js";
-import { incorrectId, playerError, topTenError } from "./errors/handling.js";
+import {
+    allCatcher,
+    incorrectId,
+    playerError,
+    topTenError,
+} from "./errors/handling.js";
 import {
     buildMessage,
     jsonToOutput,
@@ -9,6 +14,8 @@ import {
     numberWithCommas,
     toCapitalCase,
 } from "./utils/utils.js";
+import { AttachmentBuilder } from "discord.js";
+import { COMMAND_MESSAGES } from "../constants/messages.js";
 
 const womClient = new WOMClient();
 
@@ -45,8 +52,7 @@ export async function getGroupCompetitions(msg, groupId) {
         );
         console.log(competitions);
     } catch (e) {
-        msg.reply("Something went wrong.");
-        console.trace();
+        allCatcher(e, msg);
     }
 }
 
@@ -136,13 +142,13 @@ export async function getPlayerSkillStat(msg, metric, playerName) {
                 })[0];
                 let message = `Here are the ${
                     Skills[toCapitalCase(skillStats.metric)]
-                } stats for ${displayName}:\n\`\`\`Level ${
+                } stats for ${displayName}:\n\`\`\`Level: ${
                     skillStats.level
-                }  ${numberWithCommas(
+                }\nExp: ${numberWithCommas(
                     skillStats.experience
-                )} Exp  Rank ${numberWithCommas(
+                )} Exp\nRank: ${numberWithCommas(
                     skillStats.rank
-                )}  ${skillStats.ehp.toFixed(2)} EHP\`\`\``;
+                )}\nEHP: ${skillStats.ehp.toFixed(2)} hours\`\`\``;
                 msg.reply(message);
             });
     } catch (e) {
@@ -166,9 +172,9 @@ export async function getPlayerBossStat(msg, metric, playerName) {
                     Bosses[bossStats.metric]
                 } stats for ${displayName}:\n\`\`\`Kills or completions: ${numberWithCommas(
                     bossStats.kills
-                )}  Rank ${numberWithCommas(
+                )}\nRank: ${numberWithCommas(
                     bossStats.rank
-                )}  ${bossStats.ehb.toFixed(2)} EHB\`\`\``;
+                )}\nEHB: ${bossStats.ehb.toFixed(2)} hours\`\`\``;
                 msg.reply(message);
             });
     } catch (e) {
@@ -177,28 +183,26 @@ export async function getPlayerBossStat(msg, metric, playerName) {
 }
 
 export function getCommands(msg) {
-    const message = `The Degeneration bot supports the following commands:\n\`\`\`${"!help".padEnd(
-        8
-    )} displays all of the available commands\n${"!sotw".padEnd(
-        8
-    )} displays the top 5 for a Skill of the Week competition. usage: !sotw <competition_id>\n${"!botw".padEnd(
-        8
-    )} displays the top 5 for a Boss of the Week competition. usage: !botw <competition_id>\n${"!comps".padEnd(
-        8
-    )} Work in progress\n${"!ttm".padEnd(
-        8
-    )} displays a list of the 10 players in Regeneration that are closest to maxing in ehp\n${"!exp".padEnd(
-        8
-    )} displays a list of the top 10 players in Regeneration that have the most total exp\n${"!ehb".padEnd(
-        8
-    )} displays a list of the top 10 players in regeneration that have the most ehb (efficient hours bossed)\n${"!ehp".padEnd(
-        8
-    )} displays a list of the top 10 players in regeneration that have the most ehp (efficient hours played)\n${"!stats".padEnd(
-        8
-    )} displays all of the skilling stats of a player. usage: !stats <player_name>\n${"!lvl".padEnd(
-        8
-    )} displays the skilling stats of a single skill of a player. usage: !lvl <skill_name> <player_name>\n${"!kc".padEnd(
-        8
-    )} displays the stats of a certain boss or pvm activity for a player. usage: !kc <boss_identifier> <player_name>\n\nThe boss_identifier is typically the name of the boss in lowercase, separated by underscores, e.g. thermonuclear_smoke_devil or chambers_of_xeric. We are working on allowing certain common abbreviations as well (e.g. cox or tob or thermy, etc...).\`\`\``;
-    msg.reply(message);
+    try {
+        const message = `The Degeneration bot supports the following commands:\n\`\`\`${COMMAND_MESSAGES.join(
+            ""
+        )}\nThe boss_identifier is typically the name of the boss in lowercase, separated by underscores, e.g. thermonuclear_smoke_devil or chambers_of_xeric. We are working on allowing certain common abbreviations as well (e.g. cox or tob or thermy, etc...).\`\`\``;
+        msg.reply(message);
+    } catch (e) {
+        allCatcher(e, msg);
+    }
+}
+
+export function getClanRankCalculator(msg) {
+    try {
+        const attachment = new AttachmentBuilder(
+            "public/files/Clan_Rank_Calculator_v2.0.xlsx"
+        );
+        msg.reply({
+            content: "Here is the Clan Rank Calculator:",
+            files: [attachment],
+        });
+    } catch (e) {
+        allCatcher(e, msg);
+    }
 }

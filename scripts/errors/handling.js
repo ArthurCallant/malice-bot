@@ -21,3 +21,9 @@ export function playerError(e, msg) {
     console.trace();
     console.error(e);
 }
+
+export function allCatcher(e, msg) {
+    msg.reply("Something went wrong. Please try again, or contact Belgiska.");
+    console.trace();
+    console.error(e);
+}
