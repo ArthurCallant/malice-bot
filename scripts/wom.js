@@ -1,4 +1,5 @@
 import { WOMClient } from "@wise-old-man/utils";
+import axios from "axios";
 import { Bosses, Skills } from "../constants/enums.js";
 import {
     allCatcher,
@@ -19,12 +20,12 @@ import { COMMAND_MESSAGES } from "../constants/messages.js";
 
 const womClient = new WOMClient();
 
-export async function getAllUsernames(groupId) {
+export async function getAllDisplayNames(groupId) {
     try {
         const memberships = (await womClient.groups.getGroupDetails(groupId))
             .memberships;
         return memberships.map((p) => {
-            return p.player.username;
+            return p.player.displayName;
         });
     } catch (e) {
         allCatcher(e);
@@ -70,14 +71,34 @@ export async function getGroupCompetitions(msg, groupId) {
 
 export async function getTopTen(msg, groupId, metric) {
     try {
-        const memberships = (await womClient.groups.getGroupDetails(groupId))
-            .memberships;
-        const sortedMemberships = sortMembershipsByMetric(
-            memberships,
-            metric
-        ).slice(0, 10);
-        const message = buildMessage(sortedMemberships, metric);
-        msg.reply(message);
+        if (metric === "pets" || metric === "log") {
+            const usernames = await getAllDisplayNames(groupId);
+            msg.reply(
+                `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
+                    (usernames.length / 30 + 1) *
+                    5
+                ).toFixed(0)} secs.)`
+            );
+            const resArray = await getColTopTen(metric, usernames);
+            const arrayOfObjects = await Promise.all(resArray);
+            const sortedResArray =
+                metric === "pets"
+                    ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
+                    : arrayOfObjects.sort(
+                          (a, b) => b.uniqueObtained - a.uniqueObtained
+                      );
+            await Promise.all(sortedResArray);
+            msg.reply(buildMessage(sortedResArray, metric));
+        } else {
+            const memberships = (
+                await womClient.groups.getGroupDetails(groupId)
+            ).memberships;
+            const sortedMemberships = sortMembershipsByMetric(
+                memberships,
+                metric
+            ).slice(0, 10);
+            msg.reply(buildMessage(sortedMemberships, metric));
+        }
     } catch (e) {
         topTenError(e, msg);
     }
@@ -216,5 +237,72 @@ export function getClanRankCalculator(msg) {
         });
     } catch (e) {
         allCatcher(e, msg);
+    }
+}
+
+export async function getColTopTen(metric, usernames) {
+    const batchSize = 30; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
+    let curReq = 0;
+
+    const promises = [];
+    const resMap = [];
+    while (curReq < usernames.length) {
+        const end =
+            usernames.length < curReq + batchSize
+                ? usernames.length
+                : curReq + batchSize;
+        const concurrentReq = new Array(batchSize);
+
+        for (let index = curReq; index < end; index++) {
+            const promise = axios
+                .get(
+                    `https://api.collectionlog.net/collectionlog/user/${usernames[index]}`
+                )
+                .then((res) => {
+                    resMap.push(
+                        colLogObjectBuilder(metric, usernames, index, res)
+                    );
+                })
+                .catch(() =>
+                    console.log(`something went wrong for ${usernames[index]}`)
+                );
+            concurrentReq.push(promise);
+            promises.push(promise);
+            console.log(`sending request ${curReq}...`);
+            curReq++;
+        }
+        console.log(`requests ${curReq - batchSize}-${curReq} done.`);
+        await Promise.all([waitForMs(5000), Promise.all(concurrentReq)]);
+    }
+    await Promise.all([promises]);
+    return resMap;
+}
+
+const waitForMs = (ms) =>
+    new Promise((resolve, reject) => setTimeout(() => resolve(), ms));
+
+async function colLogObjectBuilder(metric, usernames, index, res) {
+    try {
+        if (metric === "log") {
+            return {
+                username: usernames[index],
+                accountType: res.data.collectionLog.accountType,
+                totalObtained: res.data.collectionLog.totalObtained,
+                totalItems: res.data.collectionLog.totalItems,
+                uniqueObtained: res.data.collectionLog.uniqueObtained,
+            };
+        }
+        if (metric === "pets") {
+            return {
+                username: usernames[index],
+                pets: res.data.collectionLog.tabs.Other[
+                    "All Pets"
+                ].items.filter((i) => {
+                    return i.obtained;
+                }).length,
+            };
+        }
+    } catch (e) {
+        console.log(`Didn't work for ${usernames[index]}, skipping...`);
     }
 }

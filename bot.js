@@ -12,6 +12,8 @@ import {
     getTopTen,
 } from "./scripts/wom.js";
 
+const groupId = process.env.GROUP_ID;
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -46,19 +48,19 @@ client.on("messageCreate", (msg) => {
             getResults(msg, args[0], "botw");
             break;
         case "comps":
-            getGroupCompetitions(msg, process.env.GROUP_ID);
+            getGroupCompetitions(msg, groupId);
             break;
         case "ttm":
-            getTopTen(msg, process.env.GROUP_ID, "ttm");
+            getTopTen(msg, groupId, "ttm");
             break;
         case "exp":
-            getTopTen(msg, process.env.GROUP_ID, "exp");
+            getTopTen(msg, groupId, "exp");
             break;
         case "ehb":
-            getTopTen(msg, process.env.GROUP_ID, "ehb");
+            getTopTen(msg, groupId, "ehb");
             break;
         case "ehp":
-            getTopTen(msg, process.env.GROUP_ID, "ehp");
+            getTopTen(msg, groupId, "ehp");
             break;
         case "stats":
             playerName = args.join(" ").toString();
@@ -78,6 +80,12 @@ client.on("messageCreate", (msg) => {
             boss = args.shift().toLowerCase();
             playerName = args.join(" ").toString();
             getPlayerBossStat(msg, boss, playerName);
+            break;
+        case "log":
+            getTopTen(msg, groupId, "log");
+            break;
+        case "pets":
+            getTopTen(msg, groupId, "pets");
             break;
         default:
             break;

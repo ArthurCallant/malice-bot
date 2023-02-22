@@ -1,83 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { WOMClient } from "@wise-old-man/utils";
-import axios from "axios";
+import { buildMessage } from "./utils/utils.js";
+import { getAllDisplayNames, getColTopTen } from "./wom.js";
 
 /**
- * This file is used to obtain the top 10 for collection log slots for Regeneration.
+ * This file is used to obtain the top 10 pets for Regeneration.
  * It uses the Wise Old Man and Collection Log api's so proper integration should be setup for members wishing to compete.
  * Don't put this as a command as it has a pretty long runtime.
  */
 
 const groupId = process.env.GROUP_ID;
-
-const womClient = new WOMClient();
-
-const waitForMs = (ms) =>
-    new Promise((resolve, reject) => setTimeout(() => resolve(), ms));
-
-const memberships = (await womClient.groups.getGroupDetails(groupId))
-    .memberships;
-
-const usernames = memberships.map((p) => {
-    return p.player.displayName;
-});
-
-const petsArray = await getPets();
-const sortedPetsArray = petsArray.sort((a, b) => b.pets - a.pets);
-
-let message =
-    "The following players are the members of Regeneration that have the highest amount of unique pets:\n";
-message += `\`\`\`${sortedPetsArray
-    .slice(0, 10)
-    .map((user, index) => {
-        return `${((index + 1).toString() + ".").padEnd(
-            3
-        )} ${user.username.padEnd(12)}: ${(user.pets + " pets.").padStart(18)}`;
-    })
-    .join("\n")}\`\`\``;
-
+const usernames = await getAllDisplayNames(groupId);
+const petsArray = await getColTopTen("pets", usernames);
+const arrayOfObjects = await Promise.all(petsArray);
+const sortedPetsArray = arrayOfObjects.sort((a, b) => b.pets - a.pets);
+const message = buildMessage(sortedPetsArray, "pets");
 console.log(message);
-
-async function getPets() {
-    const batchSize = 30; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
-    let curReq = 0;
-
-    const promises = [];
-    const userPetsMap = [];
-    while (curReq < usernames.length) {
-        const end =
-            usernames.length < curReq + batchSize
-                ? usernames.length
-                : curReq + batchSize;
-        const concurrentReq = new Array(batchSize);
-
-        for (let index = curReq; index < end; index++) {
-            const promise = axios
-                .get(
-                    `https://api.collectionlog.net/collectionlog/user/${usernames[index]}`
-                )
-                .then((res) => {
-                    userPetsMap.push({
-                        username: usernames[index],
-                        pets: res.data.collectionLog.tabs.Other[
-                            "All Pets"
-                        ].items.filter((i) => {
-                            return i.obtained;
-                        }).length,
-                    });
-                })
-                .catch(() =>
-                    console.log(`something went wrong for ${usernames[index]}`)
-                );
-            concurrentReq.push(promise);
-            promises.push(promise);
-            console.log(`sending request ${curReq}...`);
-            curReq++;
-        }
-        console.log(`requests ${curReq - batchSize}-${curReq} done.`);
-        await Promise.all([waitForMs(5000), Promise.all(concurrentReq)]);
-    }
-    await Promise.all([promises]);
-    return userPetsMap;
-}

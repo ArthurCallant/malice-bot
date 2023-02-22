@@ -83,6 +83,30 @@ export function buildMessage(sortedMemberships, metric) {
                 ).padStart(15)}`;
             })
             .join("\n")}\`\`\``;
+    } else if (metric === "log") {
+        message += "have the highest amount of unique Collection Log slots:\n";
+        message += `\`\`\`${sortedMemberships
+            .slice(0, 10)
+            .map((user, index) => {
+                return `${((index + 1).toString() + ".").padEnd(
+                    3
+                )} ${user.username.padEnd(12)}: ${(
+                    user.uniqueObtained + " collection log slots."
+                ).padStart(18)}`;
+            })
+            .join("\n")}\`\`\``;
+    } else if (metric === "pets") {
+        message += "have the highest amount of unique pets:\n";
+        message += `\`\`\`${sortedMemberships
+            .slice(0, 10)
+            .map((user, index) => {
+                return `${((index + 1).toString() + ".").padEnd(
+                    3
+                )} ${user.username.padEnd(12)}: ${(
+                    user.pets + " pets."
+                ).padStart(8)}`;
+            })
+            .join("\n")}\`\`\``;
     }
     return message;
 }
