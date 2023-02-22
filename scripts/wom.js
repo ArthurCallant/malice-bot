@@ -60,10 +60,35 @@ export async function getResults(msg, id, type) {
 
 export async function getGroupCompetitions(msg, groupId) {
     try {
+        const now = new Date();
+        const ongoingComps = [];
+        const futureComps = [];
+        let message = "";
         const competitions = await womClient.groups.getGroupCompetitions(
             groupId
         );
-        console.log(competitions);
+        competitions.forEach((comp) => {
+            if (comp.startsAt < now && comp.endsAt > now) {
+                ongoingComps.push(comp.title);
+            } else if (comp.startsAt > now) {
+                futureComps.push(comp.title);
+            }
+        });
+        ongoingComps.length > 0
+            ? (message += `The ongoing competitions are: ${ongoingComps
+                  .map((c) => {
+                      return `${c}`;
+                  })
+                  .join(", ")}`)
+            : (message += "There are currently no ongoing competitions");
+        futureComps.length > 0
+            ? (message += `The future competitions are: ${futureComps
+                  .map((c) => {
+                      return `${c}`;
+                  })
+                  .join(", ")}`)
+            : (message += "\n\nThere are currently no future competitions");
+        msg.reply(message);
     } catch (e) {
         allCatcher(e, msg);
     }

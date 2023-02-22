@@ -9,19 +9,27 @@ export const COMMAND_MESSAGES = [
     `${"!botw".padEnd(
         8
     )} displays the top 5 for a Boss of the Week competition. usage: !botw <competition_id>\n`,
-    `${"!comps".padEnd(8)} Work in progress\n`,
+    `${"!comps".padEnd(
+        8
+    )} Displays all of the ongoing and future competitions\n`,
     `${"!ttm".padEnd(
         8
-    )} displays a list of the 10 players in Regeneration that are closest to maxing in ehp\n`,
+    )} displays a list of the 10 players that are closest to maxing in ehp\n`,
     `${"!exp".padEnd(
         8
-    )} displays a list of the top 10 players in Regeneration that have the most total exp\n`,
+    )} displays a list of the top 10 players that have the most total exp\n`,
     `${"!ehb".padEnd(
         8
-    )} displays a list of the top 10 players in regeneration that have the most ehb (efficient hours bossed)\n`,
+    )} displays a list of the top 10 players that have the most ehb (efficient hours bossed)\n`,
     `${"!ehp".padEnd(
         8
-    )} displays a list of the top 10 players in regeneration that have the most ehp (efficient hours played)\n`,
+    )} displays a list of the top 10 players that have the most ehp (efficient hours played)\n`,
+    `${"!log".padEnd(
+        8
+    )} displays a list of the top 10 players that have the highest amount of unique collection log slots\n`,
+    `${"!pets".padEnd(
+        8
+    )} displays a list of the top 10 players that have the highest amount of unique pets\n`,
     `${"!stats".padEnd(
         8
     )} displays all of the skilling stats of a player. usage: !stats <player_name>\n`,

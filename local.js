@@ -11,12 +11,41 @@ import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
  */
 
 // Start your local development here
-axios
-    .get("https://api.collectionlog.net/collectionlog/user/well owl be")
-    .then((res) => {
-        console.log(
-            res.data.collectionLog.tabs.Other["All Pets"].items.filter((i) => {
-                return i.obtained;
-            }).length
-        );
-    });
+const womClient = new WOMClient();
+
+const now = new Date();
+const ongoingComps = [];
+const futureComps = [];
+const competitions = await womClient.groups.getGroupCompetitions(
+    process.env.GROUP_ID
+);
+competitions.forEach((comp) => {
+    // console.log("startsAt ", comp.startsAt);
+    // console.log("endsAt ", comp.endsAt);
+    if (comp.startsAt < now && comp.endsAt > now) {
+        ongoingComps.push(comp.title);
+    } else if (comp.startsAt > now) {
+        futureComps.push(comp.title);
+    }
+});
+ongoingComps.length > 0
+    ? console.log(
+          "The ongoing competitions are: ",
+          ongoingComps
+              .map((c) => {
+                  return `${c}\n`;
+              })
+              .join("")
+      )
+    : console.log("There are currently no ongoing competitions");
+
+futureComps.length > 0
+    ? console.log(
+          "The future competitions are: ",
+          futureComps
+              .map((c) => {
+                  return `${c}\n`;
+              })
+              .join("")
+      )
+    : console.log("There are currently no future competitions");
