@@ -3,6 +3,7 @@ dotenv.config();
 import { WOMClient } from "@wise-old-man/utils";
 import axios from "axios";
 import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
+import { DateTime } from "luxon";
 
 /**
  * This file is intended as a local work area, to test new features. Instead of needing to test in a discord environment, console.log your function results.
@@ -14,38 +15,36 @@ import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
 const womClient = new WOMClient();
 
 const now = new Date();
-const ongoingComps = [];
-const futureComps = [];
+let message = "";
 const competitions = await womClient.groups.getGroupCompetitions(
     process.env.GROUP_ID
 );
+const compCalendar = [];
 competitions.forEach((comp) => {
-    // console.log("startsAt ", comp.startsAt);
-    // console.log("endsAt ", comp.endsAt);
-    if (comp.startsAt < now && comp.endsAt > now) {
-        ongoingComps.push(comp.title);
-    } else if (comp.startsAt > now) {
-        futureComps.push(comp.title);
+    if ((comp.startsAt < now && comp.endsAt > now) || comp.startsAt > now) {
+        compCalendar.push({
+            title: comp.title,
+            startDay: DateTime.fromISO(comp.startsAt.toISOString()).weekdayLong,
+            endDay: DateTime.fromISO(comp.endsAt.toISOString()).weekdayLong,
+            start: DateTime.fromISO(comp.startsAt.toISOString()).toFormat(
+                "LLL dd"
+            ),
+            end: DateTime.fromISO(comp.endsAt.toISOString()).toFormat("LLL dd"),
+            startTime: DateTime.fromISO(comp.startsAt.toISOString()).toFormat(
+                "hh:mm ZZZZ"
+            ),
+            endTime: DateTime.fromISO(comp.endsAt.toISOString()).toFormat(
+                "hh:mm ZZZZ"
+            ),
+        });
     }
 });
-ongoingComps.length > 0
-    ? console.log(
-          "The ongoing competitions are: ",
-          ongoingComps
-              .map((c) => {
-                  return `${c}\n`;
-              })
-              .join("")
-      )
-    : console.log("There are currently no ongoing competitions");
-
-futureComps.length > 0
-    ? console.log(
-          "The future competitions are: ",
-          futureComps
-              .map((c) => {
-                  return `${c}\n`;
-              })
-              .join("")
-      )
-    : console.log("There are currently no future competitions");
+console.log(compCalendar);
+message += `${compCalendar
+    .map((comp) => {
+        return `**${toCapitalCase(comp.startDay)} ${comp.start} --- ${
+            comp.startTime
+        } until ${comp.endDay} ${comp.end} ${comp.endTime}**\n - ${comp.title}`;
+    })
+    .join("\n")}`;
+console.log(message);

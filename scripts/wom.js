@@ -17,6 +17,7 @@ import {
 } from "./utils/utils.js";
 import { AttachmentBuilder } from "discord.js";
 import { COMMAND_MESSAGES } from "../constants/messages.js";
+import { DateTime } from "luxon";
 
 const womClient = new WOMClient();
 
@@ -88,6 +89,54 @@ export async function getGroupCompetitions(msg, groupId) {
                   })
                   .join(", ")}`)
             : (message += "\n\nThere are currently no future competitions");
+        msg.reply(message);
+    } catch (e) {
+        allCatcher(e, msg);
+    }
+}
+
+export async function getCompCalendar(msg, groupId) {
+    try {
+        const now = new Date();
+        let message = "";
+        const competitions = await womClient.groups.getGroupCompetitions(
+            groupId
+        );
+        const compCalendar = [];
+        competitions.forEach((comp) => {
+            const startDt = DateTime.fromISO(comp.startsAt.toISOString(), {
+                zone: "utc",
+            });
+            const endDt = DateTime.fromISO(comp.endsAt.toISOString(), {
+                zone: "utc",
+            });
+            if (
+                (comp.startsAt < now && comp.endsAt > now) ||
+                comp.startsAt > now
+            ) {
+                compCalendar.push({
+                    title: comp.title,
+                    startDt: startDt,
+                    endDt: endDt,
+                    startDay: startDt.weekdayLong,
+                    endDay: endDt.weekdayLong,
+                    start: startDt.toFormat("LLL dd"),
+                    end: endDt.toFormat("LLL dd"),
+                    startTime: startDt.toFormat("HH:mm ZZZZ"),
+                    endTime: endDt.toFormat("HH:mm ZZZZ"),
+                });
+            }
+        });
+        message += `${compCalendar
+            .sort((a, b) => a.startDt - b.startDt)
+            .map((comp) => {
+                return `**${toCapitalCase(comp.startDay)} ${comp.start} --- ${
+                    comp.startTime
+                }    until    ${toCapitalCase(comp.endDay)} ${comp.end} --- ${
+                    comp.endTime
+                }**\n - ${comp.title}`;
+            })
+            .join("\n")}`;
         msg.reply(message);
     } catch (e) {
         allCatcher(e, msg);

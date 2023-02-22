@@ -4,6 +4,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 import {
     getClanRankCalculator,
     getCommands,
+    getCompCalendar,
     getGroupCompetitions,
     getPlayerBossStat,
     getPlayerSkillStat,
@@ -49,6 +50,9 @@ client.on("messageCreate", (msg) => {
             break;
         case "comps":
             getGroupCompetitions(msg, groupId);
+            break;
+        case "calendar":
+            getCompCalendar(msg, groupId);
             break;
         case "ttm":
             getTopTen(msg, groupId, "ttm");
