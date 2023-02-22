@@ -19,6 +19,18 @@ import { COMMAND_MESSAGES } from "../constants/messages.js";
 
 const womClient = new WOMClient();
 
+export async function getAllUsernames(groupId) {
+    try {
+        const memberships = (await womClient.groups.getGroupDetails(groupId))
+            .memberships;
+        return memberships.map((p) => {
+            return p.player.username;
+        });
+    } catch (e) {
+        allCatcher(e);
+    }
+}
+
 export async function getResults(msg, id, type) {
     try {
         let winner;
