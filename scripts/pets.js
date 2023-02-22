@@ -23,33 +23,27 @@ const usernames = memberships.map((p) => {
     return p.player.displayName;
 });
 
-const colLogArray = await getCollectionLogUserArray();
-
-const sortedColLogArray = colLogArray.sort(
-    (a, b) => b.uniqueObtained - a.uniqueObtained
-);
+const petsArray = await getPets();
+const sortedPetsArray = petsArray.sort((a, b) => b.pets - a.pets);
 
 let message =
-    "The following players are the members of Regeneration that have the highest amount of unique collection log slots:\n";
-message += `\`\`\`${sortedColLogArray
+    "The following players are the members of Regeneration that have the highest amount of unique pets:\n";
+message += `\`\`\`${sortedPetsArray
     .slice(0, 10)
     .map((user, index) => {
         return `${((index + 1).toString() + ".").padEnd(
             3
-        )} ${user.username.padEnd(12)}: ${(
-            user.uniqueObtained + " collection log slots."
-        ).padStart(18)}`;
+        )} ${user.username.padEnd(12)}: ${(user.pets + " pets.").padStart(18)}`;
     })
     .join("\n")}\`\`\``;
 
 console.log(message);
 
-async function getCollectionLogUserArray() {
+async function getPets() {
     const batchSize = 30; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
     let curReq = 0;
 
     const promises = [];
-    const userColLogMap = [];
     const userPetsMap = [];
     while (curReq < usernames.length) {
         const end =
@@ -64,15 +58,18 @@ async function getCollectionLogUserArray() {
                     `https://api.collectionlog.net/collectionlog/user/${usernames[index]}`
                 )
                 .then((res) => {
-                    userColLogMap.push({
+                    userPetsMap.push({
                         username: usernames[index],
-                        accountType: res.data.collectionLog.accountType,
-                        totalObtained: res.data.collectionLog.totalObtained,
-                        totalItems: res.data.collectionLog.totalItems,
-                        uniqueObtained: res.data.collectionLog.uniqueObtained,
+                        pets: res.data.collectionLog.tabs.Other[
+                            "All Pets"
+                        ].items.filter((i) => {
+                            return i.obtained;
+                        }).length,
                     });
                 })
-                .catch((error) => console.log(error.response.data));
+                .catch(() =>
+                    console.log(`something went wrong for ${usernames[index]}`)
+                );
             concurrentReq.push(promise);
             promises.push(promise);
             console.log(`sending request ${curReq}...`);
@@ -82,5 +79,5 @@ async function getCollectionLogUserArray() {
         await Promise.all([waitForMs(5000), Promise.all(concurrentReq)]);
     }
     await Promise.all([promises]);
-    return userColLogMap;
+    return userPetsMap;
 }

@@ -11,3 +11,12 @@ import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
  */
 
 // Start your local development here
+axios
+    .get("https://api.collectionlog.net/collectionlog/user/well owl be")
+    .then((res) => {
+        console.log(
+            res.data.collectionLog.tabs.Other["All Pets"].items.filter((i) => {
+                return i.obtained;
+            }).length
+        );
+    });
