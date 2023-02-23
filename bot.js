@@ -8,7 +8,6 @@ import {
     getGroupCompetitions,
     getPlayerBossStat,
     getPlayerSkillStat,
-    getPlayerStats,
     getResults,
     getTopTen,
 } from "./scripts/wom.js";
@@ -30,65 +29,68 @@ client.on("ready", () => {
 
 client.on("messageCreate", (msg) => {
     if (msg.author.bot) return;
-    const args = msg.content.slice(1).trim().split(/ +/g);
+    const args = msg.content.trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     let playerName;
     let skill;
     let boss;
     switch (command) {
-        case "help":
+        case "!help":
+        case "/help":
+        case "?help":
             getCommands(msg);
             break;
-        case "calc":
+        case "?calc":
             getClanRankCalculator(msg);
             break;
-        case "sotw":
+        case "?sotw":
             getResults(msg, args[0], "sotw");
             break;
-        case "botw":
+        case "?botw":
             getResults(msg, args[0], "botw");
             break;
-        case "comps":
+        case "?comps":
             getGroupCompetitions(msg, groupId);
             break;
-        case "calendar":
+        case "?calendar":
             getCompCalendar(msg, groupId);
             break;
-        case "ttm":
+        case "?ttm":
             getTopTen(msg, groupId, "ttm");
             break;
-        case "exp":
+        case "?exp":
             getTopTen(msg, groupId, "exp");
             break;
-        case "ehb":
+        case "?ehb":
             getTopTen(msg, groupId, "ehb");
             break;
-        case "ehp":
+        case "?ehp":
             getTopTen(msg, groupId, "ehp");
             break;
-        case "stats":
-            playerName = args.join(" ").toString();
-            getPlayerStats(msg, playerName);
-            break;
+        // Not necessary, old school bot already has a similar, better feature
+        // case "?stats":
+        //     playerName = args.join(" ").toString();
+        //     getPlayerStats(msg, playerName);
+        //     break;
         // Response body is too big, can't split it up, so unusable
-        // case "bosses":
+        // case "?bosses":
         //     playerName = args.join(" ").toString();
         //     getPlayerBossStats(msg, playerName);
         //     break;
-        case "lvl":
+        case "?lvl":
             skill = args.shift().toLowerCase();
             playerName = args.join(" ").toString();
             getPlayerSkillStat(msg, skill, playerName);
             break;
-        case "kc":
+        case "?kc":
             boss = args.shift().toLowerCase();
             playerName = args.join(" ").toString();
             getPlayerBossStat(msg, boss, playerName);
             break;
-        case "log":
+        case "?log":
             getTopTen(msg, groupId, "log");
             break;
-        case "pets":
+        case "?pets":
             getTopTen(msg, groupId, "pets");
             break;
         default:

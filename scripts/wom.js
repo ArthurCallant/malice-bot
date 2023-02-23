@@ -163,6 +163,7 @@ export async function getTopTen(msg, groupId, metric) {
                       );
             await Promise.all(sortedResArray);
             msg.reply(buildMessage(sortedResArray, metric));
+            console.log("\nBatch process finished.");
         } else {
             const memberships = (
                 await womClient.groups.getGroupDetails(groupId)
