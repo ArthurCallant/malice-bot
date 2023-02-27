@@ -304,7 +304,7 @@ export function getCommands(msg) {
 export function getClanRankCalculator(msg) {
     try {
         const attachment = new AttachmentBuilder(
-            "public/files/Clan_Rank_Calculator_v2.0.xlsx"
+            "public/files/Clan_Rank_Calculator_v3.2.xlsx"
         );
         msg.reply({
             content: "Here is the Clan Rank Calculator:",
