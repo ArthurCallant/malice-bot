@@ -11,6 +11,12 @@ import {
     getResults,
     getTopTen,
 } from "./scripts/wom.js";
+import http from "http";
+
+http.createServer(function (req, res) {
+    res.write("I'm alive");
+    res.end();
+}).listen(8000);
 
 const groupId = process.env.GROUP_ID;
 
@@ -25,6 +31,19 @@ const client = new Client({
 
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    let activities = [
+            `raiding with Bel`,
+            `looking up Henniejj`,
+            `gone fishing`,
+            `killing Vorkath`,
+            `picking flax`,
+            `respawning in Lumbridge`,
+        ],
+        i = 0;
+    setInterval(
+        () => client.user.setActivity(`${activities[i++ % activities.length]}`),
+        10000
+    );
 });
 
 client.on("messageCreate", (msg) => {

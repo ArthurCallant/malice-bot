@@ -104,12 +104,12 @@ export async function getCompCalendar(msg, groupId) {
         );
         const compCalendar = [];
         competitions.forEach((comp) => {
-            const startDt = DateTime.fromISO(comp.startsAt.toISOString(), {
-                zone: "utc",
-            });
-            const endDt = DateTime.fromISO(comp.endsAt.toISOString(), {
-                zone: "utc",
-            });
+            const startDt = DateTime.fromISO(
+                comp.startsAt.toISOString()
+            ).setZone("Europe/London");
+            const endDt = DateTime.fromISO(comp.endsAt.toISOString()).setZone(
+                "Europe/London"
+            );
             if (
                 (comp.startsAt < now && comp.endsAt > now) ||
                 comp.startsAt > now
@@ -153,7 +153,7 @@ export async function getTopTen(msg, groupId, metric) {
                     5
                 ).toFixed(0)} secs.)`
             );
-            const resArray = await getColTopTen(metric, usernames);
+            const resArray = await getColResMap(metric, usernames);
             const arrayOfObjects = await Promise.all(resArray);
             const sortedResArray =
                 metric === "pets"
@@ -315,7 +315,7 @@ export function getClanRankCalculator(msg) {
     }
 }
 
-export async function getColTopTen(metric, usernames) {
+export async function getColResMap(metric, usernames, bossName = "") {
     const batchSize = 30; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
     let curReq = 0;
 
@@ -335,7 +335,13 @@ export async function getColTopTen(metric, usernames) {
                 )
                 .then((res) => {
                     resMap.push(
-                        colLogObjectBuilder(metric, usernames, index, res)
+                        colLogObjectBuilder(
+                            metric,
+                            usernames,
+                            index,
+                            res,
+                            bossName
+                        )
                     );
                 })
                 .catch(() =>
@@ -356,7 +362,7 @@ export async function getColTopTen(metric, usernames) {
 const waitForMs = (ms) =>
     new Promise((resolve, reject) => setTimeout(() => resolve(), ms));
 
-async function colLogObjectBuilder(metric, usernames, index, res) {
+async function colLogObjectBuilder(metric, usernames, index, res, bossName) {
     try {
         if (metric === "log") {
             return {
@@ -375,6 +381,12 @@ async function colLogObjectBuilder(metric, usernames, index, res) {
                 ].items.filter((i) => {
                     return i.obtained;
                 }).length,
+            };
+        }
+        if (metric === "boss") {
+            return {
+                username: usernames[index],
+                data: res.data.collectionLog.tabs.Bosses[bossName].items,
             };
         }
     } catch (e) {

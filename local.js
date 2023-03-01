@@ -4,6 +4,7 @@ import { WOMClient } from "@wise-old-man/utils";
 import axios from "axios";
 import { numberWithCommas, toCapitalCase } from "./scripts/utils/utils.js";
 import { DateTime } from "luxon";
+import { getColResMap } from "./scripts/wom.js";
 
 /**
  * This file is intended as a local work area, to test new features. Instead of needing to test in a discord environment, console.log your function results.
@@ -13,38 +14,26 @@ import { DateTime } from "luxon";
 
 // Start your local development here
 const womClient = new WOMClient();
+const groupId = process.env.GROUP_ID;
 
-const now = new Date();
-let message = "";
-const competitions = await womClient.groups.getGroupCompetitions(
-    process.env.GROUP_ID
+const memberships = (await womClient.groups.getGroupDetails(groupId))
+    .memberships;
+const displayNames = memberships.map((p) => {
+    return p.player.displayName;
+});
+
+const colResArray = await getColResMap(
+    "boss",
+    displayNames,
+    "Thermonuclear Smoke Devil"
 );
-const compCalendar = [];
-competitions.forEach((comp) => {
-    if ((comp.startsAt < now && comp.endsAt > now) || comp.startsAt > now) {
-        compCalendar.push({
-            title: comp.title,
-            startDay: DateTime.fromISO(comp.startsAt.toISOString()).weekdayLong,
-            endDay: DateTime.fromISO(comp.endsAt.toISOString()).weekdayLong,
-            start: DateTime.fromISO(comp.startsAt.toISOString()).toFormat(
-                "LLL dd"
-            ),
-            end: DateTime.fromISO(comp.endsAt.toISOString()).toFormat("LLL dd"),
-            startTime: DateTime.fromISO(comp.startsAt.toISOString()).toFormat(
-                "hh:mm ZZZZ"
-            ),
-            endTime: DateTime.fromISO(comp.endsAt.toISOString()).toFormat(
-                "hh:mm ZZZZ"
-            ),
-        });
+const arrayOfObjects = await Promise.all(colResArray);
+arrayOfObjects.forEach((user) => {
+    console.log(user);
+    if (!!user.username && !!user.data) {
+        console.log(user.username + ": \n", user["data"]);
     }
 });
-console.log(compCalendar);
-message += `${compCalendar
-    .map((comp) => {
-        return `**${toCapitalCase(comp.startDay)} ${comp.start} --- ${
-            comp.startTime
-        } until ${comp.endDay} ${comp.end} ${comp.endTime}**\n - ${comp.title}`;
-    })
-    .join("\n")}`;
-console.log(message);
+// arrayOfObjects[0].data.map((i) => {
+//     console.log(i);
+// });
