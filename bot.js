@@ -12,6 +12,7 @@ import {
     getTopTen,
 } from "./scripts/wom.js";
 import http from "http";
+import { ACTIVITIES } from "constants/messages.js";
 
 http.createServer(function (req, res) {
     res.write("I'm alive");
@@ -31,18 +32,11 @@ const client = new Client({
 
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    let activities = [
-            `raiding with Bel`,
-            `looking up Henniejj`,
-            `gone fishing`,
-            `killing Vorkath`,
-            `picking flax`,
-            `respawning in Lumbridge`,
-        ],
+    let activities = ACTIVITIES,
         i = 0;
     setInterval(
         () => client.user.setActivity(`${activities[i++ % activities.length]}`),
-        10000
+        10000 * 60 * 5
     );
 });
 

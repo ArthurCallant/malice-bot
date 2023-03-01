@@ -41,3 +41,28 @@ export const COMMAND_MESSAGES = [
         8
     )} displays the stats of a certain boss or pvm activity for a player. usage: ?kc <boss_identifier> <player_name>\n`,
 ];
+
+export const ACTIVITIES = [
+    `raiding with Bel`,
+    `looking up Henniejj`,
+    `gone fishing`,
+    `killing Vorkath`,
+    `picking flax`,
+    `respawning in Lumbridge`,
+    `crafting Blood runes`,
+    `decanting potions`,
+    `cooking Karambwans`,
+    `scouting raids`,
+    `buying Gold ore`,
+    `running rooftops`,
+    `making Mahogany tables`,
+    `managing my kingdom`,
+    `chopping Redwood logs`,
+    `tanning leather`,
+    `cutting gems`,
+    `mining Amethyst`,
+    `subduing Wintertodt`,
+    `training Ranged`,
+    `killing Zulrah`,
+    `completing quests`,
+];
