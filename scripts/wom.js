@@ -18,7 +18,7 @@ import {
 import { AttachmentBuilder } from "discord.js";
 import { COMMAND_MESSAGES } from "../constants/messages.js";
 import { DateTime } from "luxon";
-import { blacklist } from "constants/blacklist.js";
+import { blacklist } from "../constants/blacklist.js";
 
 const womClient = new WOMClient();
 
