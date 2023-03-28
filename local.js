@@ -22,18 +22,47 @@ const displayNames = memberships.map((p) => {
     return p.player.displayName;
 });
 
-const colResArray = await getColResMap(
-    "boss",
-    displayNames,
-    "Thermonuclear Smoke Devil"
-);
-const arrayOfObjects = await Promise.all(colResArray);
-arrayOfObjects.forEach((user) => {
-    console.log(user);
-    if (!!user.username && !!user.data) {
-        console.log(user.username + ": \n", user["data"]);
-    }
-});
+// const colResArray = await getColResMap(
+//     "boss",
+//     displayNames,
+//     "Thermonuclear Smoke Devil"
+// );
+// const arrayOfObjects = await Promise.all(colResArray);
+// arrayOfObjects.forEach((user) => {
+//     console.log(user);
+//     if (!!user.username && !!user.data) {
+//         console.log(user.username + ": \n", user["data"]);
+//     }
+// });
 // arrayOfObjects[0].data.map((i) => {
 //     console.log(i);
 // });
+
+// const displayNames = ["Rihsky", "Belgiska"];
+
+console.log(displayNames);
+
+const metric = "boss";
+
+const resArray = await getColResMap(metric, displayNames, "Zulrah");
+const arrayOfObjects = await Promise.all(resArray);
+const sortedResArray = arrayOfObjects;
+// metric === "pets"
+//     ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
+//     : arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
+await Promise.all(sortedResArray);
+console.log("\nBatch process finished.");
+try {
+    const message = sortedResArray
+        .map((user) => {
+            return `${user.username}: \n${user.data
+                .map((data) => {
+                    return `${data.name}: ${data.quantity}`.padStart(30);
+                })
+                .join("\n")}`;
+        })
+        .join("\n\n");
+    console.log(message);
+} catch (e) {
+    console.log(e);
+}

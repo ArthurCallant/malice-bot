@@ -18,6 +18,7 @@ import {
 import { AttachmentBuilder } from "discord.js";
 import { COMMAND_MESSAGES } from "../constants/messages.js";
 import { DateTime } from "luxon";
+import { blacklist } from "constants/blacklist.js";
 
 const womClient = new WOMClient();
 
@@ -25,9 +26,10 @@ export async function getAllDisplayNames(groupId) {
     try {
         const memberships = (await womClient.groups.getGroupDetails(groupId))
             .memberships;
-        return memberships.map((p) => {
+        const displayNames = memberships.map((p) => {
             return p.player.displayName;
         });
+        return displayNames.filter((name) => !blacklist.includes(name));
     } catch (e) {
         allCatcher(e);
     }
@@ -316,7 +318,7 @@ export function getClanRankCalculator(msg) {
 }
 
 export async function getColResMap(metric, usernames, bossName = "") {
-    const batchSize = 30; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
+    const batchSize = 70; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
     let curReq = 0;
 
     const promises = [];
