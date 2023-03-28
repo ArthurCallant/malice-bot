@@ -1,4 +1,4 @@
-import { blacklist } from "constants/blacklist";
+import { blacklist } from "../../constants/blacklist.js";
 
 export function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
