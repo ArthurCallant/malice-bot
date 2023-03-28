@@ -173,7 +173,9 @@ export async function getTopTen(msg, groupId, metric) {
             const sortedMemberships = sortMembershipsByMetric(
                 memberships,
                 metric
-            ).slice(0, 10);
+            )
+                .filter((user) => !blacklist.includes(user.player.displayName))
+                .slice(0, 10);
             msg.reply(buildMessage(sortedMemberships, metric));
         }
     } catch (e) {
