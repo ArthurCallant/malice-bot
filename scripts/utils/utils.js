@@ -1,3 +1,5 @@
+import { blacklist } from "constants/blacklist";
+
 export function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -42,6 +44,7 @@ export function buildMessage(sortedMemberships, metric) {
     if (metric === "ttm") {
         message += "are closest to maxing:\n";
         message += `\`\`\`${sortedMemberships
+            .filter((user) => !blacklist.includes(user.player.displayName))
             .map((m, i) => {
                 return `${((i + 1).toString() + ".").padEnd(
                     3
@@ -53,6 +56,7 @@ export function buildMessage(sortedMemberships, metric) {
     } else if (metric === "exp") {
         message += "have the highest amount of Exp:\n";
         message += `\`\`\`${sortedMemberships
+            .filter((user) => !blacklist.includes(user.player.displayName))
             .map((m, i) => {
                 return `${((i + 1).toString() + ".").padEnd(
                     3
@@ -64,6 +68,7 @@ export function buildMessage(sortedMemberships, metric) {
     } else if (metric === "ehb") {
         message += "have the highest amount of Efficient Hours Bossed:\n";
         message += `\`\`\`${sortedMemberships
+            .filter((user) => !blacklist.includes(user.player.displayName))
             .map((m, i) => {
                 return `${((i + 1).toString() + ".").padEnd(
                     3
@@ -75,6 +80,7 @@ export function buildMessage(sortedMemberships, metric) {
     } else if (metric === "ehp") {
         message += "have the highest amount of Efficient Hours Played:\n";
         message += `\`\`\`${sortedMemberships
+            .filter((user) => !blacklist.includes(user.player.displayName))
             .map((m, i) => {
                 return `${((i + 1).toString() + ".").padEnd(
                     3
