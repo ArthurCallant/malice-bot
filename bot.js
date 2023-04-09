@@ -107,10 +107,10 @@ client.on("messageCreate", (msg) => {
         case "?pets":
             getTopTen(msg, groupId, "pets");
             break;
-        case "?snapshot":
-            boss = args.shift().toLowerCase();
-            getBossSnapshotCsv(msg, boss);
-            break;
+        // case "?snapshot":
+        //     boss = args.shift().toLowerCase();
+        //     getBossSnapshotCsv(msg, groupId, boss);
+        //     break;
         default:
             break;
     }

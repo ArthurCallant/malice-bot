@@ -416,10 +416,10 @@ export async function getResults(msg, id, type) {
     }
 }
 
-export async function getBossSnapshotCsv(msg, boss) {
+export async function getBossSnapshotCsv(msg, groupId, boss) {
     try {
-        const displayNames = await getAllDisplayNames();
-        msg.reply(
+        const displayNames = await getAllDisplayNames(groupId);
+        await msg.reply(
             `Please wait while I create a snapshot for "${boss}". (approx. ${(
                 (displayNames.length / 30 + 1) *
                 5
@@ -445,7 +445,7 @@ export async function getBossSnapshotCsv(msg, boss) {
             })
             .join("")}`;
 
-        const fileName = `zulrah_${DateTime.now().toISOString()}.tsx`;
+        const fileName = `${boss}_${DateTime.now()}.tsx`;
 
         writeFile(
             `public/output/${fileName}`,
@@ -461,7 +461,7 @@ export async function getBossSnapshotCsv(msg, boss) {
         );
 
         const attachment = new AttachmentBuilder(`public/output/${fileName}`);
-        msg.reply({
+        await msg.reply({
             content: "Here is a csv of the created snapshot:",
             files: [attachment],
         });
