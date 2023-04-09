@@ -418,7 +418,7 @@ export async function getResults(msg, id, type) {
 
 export async function getBossSnapshotCsv(msg, boss) {
     try {
-        const displayNames = getAllDisplayNames();
+        const displayNames = await getAllDisplayNames();
         msg.reply(
             `Please wait while I create a snapshot for "${boss}". (approx. ${(
                 (displayNames.length / 30 + 1) *
@@ -466,6 +466,7 @@ export async function getBossSnapshotCsv(msg, boss) {
             files: [attachment],
         });
     } catch (e) {
+        allCatcher(e, msg);
         console.log(e);
     }
 }
