@@ -52,16 +52,38 @@ const sortedResArray = arrayOfObjects;
 //     : arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
 await Promise.all(sortedResArray);
 console.log("\nBatch process finished.");
+// try {
+//     const message = sortedResArray
+//         .map((user) => {
+//             return !user
+//                 ? ""
+//                 : `${user.username}: ${user.kc} killcount
+//                 \n${user.data
+//                     .map((data) =>
+//                         `${data.name}: ${data.quantity}`.padStart(30)
+//                     )
+//                     .join("\n")}`;
+//         })
+//         .join("\n\n");
+//     console.log(message);
+// } catch (e) {
+//     console.log(e);
+// }
+
 try {
-    const message = sortedResArray
+    const message = `username,killcount,${sortedResArray
+        .find((user) => !!user)
+        .data.map((data) => data.name)
+        .join(",")}\n${sortedResArray
         .map((user) => {
-            return `${user.username}: \n${user.data
-                .map((data) => {
-                    return `${data.name}: ${data.quantity}`.padStart(30);
-                })
-                .join("\n")}`;
+            if (!user) {
+                return;
+            }
+            return `${user.username},${user.kc},${user.data
+                .map((data) => data.quantity)
+                .join(",")}\n`;
         })
-        .join("\n\n");
+        .join("")}`;
     console.log(message);
 } catch (e) {
     console.log(e);

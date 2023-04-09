@@ -1,3 +1,5 @@
+import { writeFile } from "fs";
+
 export function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -109,4 +111,15 @@ export function buildMessage(sortedMemberships, metric) {
             .join("\n")}\`\`\``;
     }
     return message;
+}
+
+export function logUsernames(usernames) {
+    const output = usernames.join("\n");
+    writeFile("public/logs/usernames_log.txt", output, (err) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log("A file has been created with errorred usernames");
+    });
 }
