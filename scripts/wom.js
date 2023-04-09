@@ -14,11 +14,13 @@ import {
     top5members,
     numberWithCommas,
     toCapitalCase,
+    logUsernames,
 } from "./utils/utils.js";
 import { AttachmentBuilder } from "discord.js";
 import { COMMAND_MESSAGES } from "../constants/messages.js";
 import { DateTime } from "luxon";
-import { blacklist } from "../constants/blacklist.js";
+import { BLACKLIST } from "../constants/blacklist.js";
+import { writeFile } from "fs";
 
 const womClient = new WOMClient();
 
@@ -29,35 +31,47 @@ export async function getAllDisplayNames(groupId) {
         const displayNames = memberships.map((p) => {
             return p.player.displayName;
         });
-        return displayNames.filter((name) => !blacklist.includes(name));
+        return displayNames.filter((name) => !BLACKLIST.includes(name));
     } catch (e) {
         allCatcher(e);
     }
 }
 
-export async function getResults(msg, id, type) {
+export async function getTopTen(msg, groupId, metric) {
     try {
-        let winner;
-        let secondPlace;
-        return await womClient.competitions
-            .getCompetitionDetails(id)
-            .then((json) => {
-                const output = top5members(json);
-                winner = output[0].player.displayName;
-                secondPlace = output[1].player.displayName;
-                return output;
-            })
-            .then((json) => jsonToOutput(json, type))
-            .then((res) => {
-                let message = `Here are the results for the ${
-                    type === "sotw" ? "Skill of the Week" : "Boss of the Week"
-                } competition:\n`;
-                message += `\`\`\`${res.join("\n")}\`\`\``;
-                message += `\nThank you to everyone who took part!\n${winner} gets 2 bonds for winning, ${secondPlace} gets 1 for coming in second place. Please contact any admin or leader for the payout.\n\nHappy scaping and we hope to see you all compete in the next event!`;
-                msg.reply(message);
-            });
+        if (metric === "pets" || metric === "log") {
+            const usernames = await getAllDisplayNames(groupId);
+            msg.reply(
+                `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
+                    (usernames.length / 30 + 1) *
+                    5
+                ).toFixed(0)} secs.)`
+            );
+            const resArray = await getColResMap(metric, usernames);
+            const arrayOfObjects = await Promise.all(resArray);
+            const sortedResArray =
+                metric === "pets"
+                    ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
+                    : arrayOfObjects.sort(
+                          (a, b) => b.uniqueObtained - a.uniqueObtained
+                      );
+            await Promise.all(sortedResArray);
+            msg.reply(buildMessage(sortedResArray, metric));
+            console.log("\nBatch process finished.");
+        } else {
+            const memberships = (
+                await womClient.groups.getGroupDetails(groupId)
+            ).memberships;
+            const sortedMemberships = sortMembershipsByMetric(
+                memberships,
+                metric
+            )
+                .filter((user) => !BLACKLIST.includes(user.player.displayName))
+                .slice(0, 10);
+            msg.reply(buildMessage(sortedMemberships, metric));
+        }
     } catch (e) {
-        incorrectId(e, msg);
+        topTenError(e, msg);
     }
 }
 
@@ -142,44 +156,6 @@ export async function getCompCalendar(msg, groupId) {
         msg.reply(message);
     } catch (e) {
         allCatcher(e, msg);
-    }
-}
-
-export async function getTopTen(msg, groupId, metric) {
-    try {
-        if (metric === "pets" || metric === "log") {
-            const usernames = await getAllDisplayNames(groupId);
-            msg.reply(
-                `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
-                    (usernames.length / 30 + 1) *
-                    5
-                ).toFixed(0)} secs.)`
-            );
-            const resArray = await getColResMap(metric, usernames);
-            const arrayOfObjects = await Promise.all(resArray);
-            const sortedResArray =
-                metric === "pets"
-                    ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
-                    : arrayOfObjects.sort(
-                          (a, b) => b.uniqueObtained - a.uniqueObtained
-                      );
-            await Promise.all(sortedResArray);
-            msg.reply(buildMessage(sortedResArray, metric));
-            console.log("\nBatch process finished.");
-        } else {
-            const memberships = (
-                await womClient.groups.getGroupDetails(groupId)
-            ).memberships;
-            const sortedMemberships = sortMembershipsByMetric(
-                memberships,
-                metric
-            )
-                .filter((user) => !blacklist.includes(user.player.displayName))
-                .slice(0, 10);
-            msg.reply(buildMessage(sortedMemberships, metric));
-        }
-    } catch (e) {
-        topTenError(e, msg);
     }
 }
 
@@ -323,6 +299,9 @@ export async function getColResMap(metric, usernames, bossName = "") {
     const batchSize = 70; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
     let curReq = 0;
 
+    // Collect failed fetch usernames
+    const failedUsers = [];
+
     const promises = [];
     const resMap = [];
     while (curReq < usernames.length) {
@@ -338,19 +317,29 @@ export async function getColResMap(metric, usernames, bossName = "") {
                     `https://api.collectionlog.net/collectionlog/user/${usernames[index]}`
                 )
                 .then((res) => {
-                    resMap.push(
-                        colLogObjectBuilder(
-                            metric,
-                            usernames,
-                            index,
-                            res,
-                            bossName
-                        )
-                    );
+                    try {
+                        resMap.push(
+                            colLogObjectBuilder(
+                                metric,
+                                usernames,
+                                index,
+                                res,
+                                bossName
+                            )
+                        );
+                    } catch (e) {
+                        console.log(
+                            `${usernames[index]} is missing data, skipping...`
+                        );
+                        failedUsers.push(usernames[index]);
+                    }
                 })
-                .catch(() =>
-                    console.log(`something went wrong for ${usernames[index]}`)
-                );
+                .catch(() => {
+                    console.log(
+                        `Unable to find collection log for user ${usernames[index]}`
+                    );
+                    failedUsers.push(usernames[index]);
+                });
             concurrentReq.push(promise);
             promises.push(promise);
             console.log(`sending request ${curReq}...`);
@@ -359,6 +348,7 @@ export async function getColResMap(metric, usernames, bossName = "") {
         console.log(`requests ${curReq - batchSize}-${curReq} done.`);
         await Promise.all([waitForMs(5000), Promise.all(concurrentReq)]);
     }
+    logUsernames(failedUsers.sort());
     await Promise.all([promises]);
     return resMap;
 }
@@ -391,9 +381,91 @@ async function colLogObjectBuilder(metric, usernames, index, res, bossName) {
             return {
                 username: usernames[index],
                 data: res.data.collectionLog.tabs.Bosses[bossName].items,
+                kc: res.data.collectionLog.tabs.Bosses[bossName].killCount[0]
+                    .amount,
             };
         }
     } catch (e) {
-        console.log(`Didn't work for ${usernames[index]}, skipping...`);
+        console.log(`${usernames[index]} is missing data, skipping...`);
+    }
+}
+
+export async function getResults(msg, id, type) {
+    try {
+        let winner;
+        let secondPlace;
+        return await womClient.competitions
+            .getCompetitionDetails(id)
+            .then((json) => {
+                const output = top5members(json);
+                winner = output[0].player.displayName;
+                secondPlace = output[1].player.displayName;
+                return output;
+            })
+            .then((json) => jsonToOutput(json, type))
+            .then((res) => {
+                let message = `Here are the results for the ${
+                    type === "sotw" ? "Skill of the Week" : "Boss of the Week"
+                } competition:\n`;
+                message += `\`\`\`${res.join("\n")}\`\`\``;
+                message += `\nThank you to everyone who took part!\n${winner} gets 2 bonds for winning, ${secondPlace} gets 1 for coming in second place. Please contact any admin or leader for the payout.\n\nHappy scaping and we hope to see you all compete in the next event!`;
+                msg.reply(message);
+            });
+    } catch (e) {
+        incorrectId(e, msg);
+    }
+}
+
+export async function getBossSnapshotCsv(msg, boss) {
+    try {
+        const displayNames = getAllDisplayNames();
+        msg.reply(
+            `Please wait while I create a snapshot for "${boss}". (approx. ${(
+                (displayNames.length / 30 + 1) *
+                5
+            ).toFixed(0)} secs.)`
+        );
+        const resArray = await getColResMap("boss", displayNames, boss);
+        const arrayOfObjects = await Promise.all(resArray);
+        const sortedResArray = arrayOfObjects;
+        await Promise.all(sortedResArray);
+        console.log("\nBatch process finished.");
+
+        const csv = `username,killcount,${sortedResArray
+            .find((user) => !!user)
+            .data.map((data) => data.name)
+            .join(",")}\n${sortedResArray
+            .map((user) => {
+                if (!user) {
+                    return;
+                }
+                return `${user.username},${user.kc},${user.data
+                    .map((data) => data.quantity)
+                    .join(",")}\n`;
+            })
+            .join("")}`;
+
+        const fileName = `zulrah_${DateTime.now().toISOString()}.tsx`;
+
+        writeFile(
+            `public/output/${fileName}`,
+            csv,
+            { flag: "wx" },
+            function (err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                console.log("Snapshot created.");
+            }
+        );
+
+        const attachment = new AttachmentBuilder(`public/output/${fileName}`);
+        msg.reply({
+            content: "Here is a csv of the created snapshot:",
+            files: [attachment],
+        });
+    } catch (e) {
+        console.log(e);
     }
 }
