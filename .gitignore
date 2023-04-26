@@ -4,3 +4,5 @@ node_modules
 replit.nix
 */logs/*
 */output/*
+credentials.json
+token.json

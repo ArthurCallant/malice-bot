@@ -16,6 +16,7 @@ import {
     toCapitalCase,
     logUsernames,
 } from "./utils/utils.js";
+import { getPointsByUsername } from "../scripts/points.js";
 import { AttachmentBuilder } from "discord.js";
 import { COMMAND_MESSAGES } from "../constants/messages.js";
 import { DateTime } from "luxon";
@@ -465,6 +466,23 @@ export async function getBossSnapshotCsv(msg, groupId, boss) {
             content: "Here is a csv of the created snapshot:",
             files: [attachment],
         });
+    } catch (e) {
+        allCatcher(e, msg);
+        console.log(e);
+    }
+}
+
+export async function getBalance(msg, username) {
+    try {
+        const points = await getPointsByUsername(username);
+        if (points !== undefined) {
+            message = `The current balance for ${username} is: ${points} Regencoin${
+                points === 1 ? "" : "s"
+            }`;
+        } else {
+            message = `No balance was found for ${username}. If you are sure you spelled the username correctly, please contact Belgiska.`;
+        }
+        msg.reply(message);
     } catch (e) {
         allCatcher(e, msg);
         console.log(e);

@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits } from "discord.js";
 import {
+    getBalance,
     getBossSnapshotCsv,
     getClanRankCalculator,
     getCommands,
@@ -106,6 +107,10 @@ client.on("messageCreate", (msg) => {
             break;
         case "?pets":
             getTopTen(msg, groupId, "pets");
+            break;
+        case "?balance":
+            playerName = args.join(" ").toString();
+            getBalance(msg, playerName);
             break;
         // case "?snapshot":
         //     boss = args.shift().toLowerCase();
