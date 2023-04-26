@@ -475,6 +475,7 @@ export async function getBossSnapshotCsv(msg, groupId, boss) {
 export async function getBalance(msg, username) {
     try {
         const points = await getPointsByUsername(username);
+        let message = "";
         if (points !== undefined) {
             message = `The current balance for ${username} is: ${points} Regencoin${
                 points === 1 ? "" : "s"
