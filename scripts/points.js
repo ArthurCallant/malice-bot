@@ -97,7 +97,7 @@ async function listUsersPoints(auth) {
     });
 }
 
-async function getPointsByUsername(username) {
+export async function getPointsByUsername(username) {
     // First make sure the local coins file is up to date with the spreadsheet (SSOT)
     const promise = authorize().then(listUsersPoints).catch(console.error);
     await Promise.all([promise]);
