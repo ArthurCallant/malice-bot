@@ -113,7 +113,6 @@ export async function getPointsByUsername(username) {
             break;
         }
     }
-    console.log(pointValue);
     return pointValue;
 }
 
