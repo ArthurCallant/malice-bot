@@ -481,7 +481,7 @@ export async function getBalance(msg, username) {
                 points === 1 ? "" : "s"
             }`;
         } else {
-            message = `No balance was found for ${username}. If you are sure you spelled the username correctly, please contact Belgiska.`;
+            message = `No balance was found for ${username}. If you are sure you spelled the username correctly, please contact Belgiska. Alternatively, try the command again (sometimes it noodles out).`;
         }
         msg.reply(message);
     } catch (e) {

@@ -68,6 +68,7 @@ async function authorize() {
     if (client.credentials) {
         await saveCredentials(client);
     }
+    console.log(client);
     return client;
 }
 
@@ -88,7 +89,7 @@ async function listUsersPoints(auth) {
         })
         .join("\n");
 
-    fs.writeFile("public/output/regen-points.txt", output, (err) => {
+    await fs.writeFile("public/output/regen-points.txt", output, (err) => {
         if (err) {
             console.log(err);
             return;
@@ -99,8 +100,12 @@ async function listUsersPoints(auth) {
 
 export async function getPointsByUsername(username) {
     // First make sure the local coins file is up to date with the spreadsheet (SSOT)
-    const promise = authorize().then(listUsersPoints).catch(console.error);
-    await Promise.all([promise]);
+    const auth = await authorize();
+    try {
+        await listUsersPoints(auth);
+    } catch (e) {
+        console.error(e);
+    }
 
     const file = await fs.readFile("public/output/regen-points.txt", "utf-8");
     const lines = file.split("\n");
@@ -116,7 +121,7 @@ export async function getPointsByUsername(username) {
     return pointValue;
 }
 
-getPointsByUsername("belgiska");
+getPointsByUsername("regen Matt");
 //
 //
 //
