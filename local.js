@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
-import { WOMClient } from "@wise-old-man/utils";
+import { WOMClient } from '@wise-old-man/utils';
 
 /**
  * This file is intended as a local work area, to test new features. Instead of needing to test in a discord environment, console.log your function results.
