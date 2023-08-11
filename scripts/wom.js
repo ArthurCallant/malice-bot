@@ -11,7 +11,7 @@ import {
   toCapitalCase,
   logUsernames
 } from './utils/utils.js';
-import { getPointsByUsername } from '../scripts/points.js';
+import { getAllPointsSorted, getPointsByUsername } from '../scripts/points.js';
 import { AttachmentBuilder } from 'discord.js';
 import { COMMAND_MESSAGES } from '../constants/messages.js';
 import { DateTime } from 'luxon';
@@ -34,29 +34,43 @@ export async function getAllDisplayNames(groupId) {
 
 export async function getTopTen(msg, groupId, metric) {
   try {
-    if (metric === 'pets' || metric === 'log') {
-      const usernames = await getAllDisplayNames(groupId);
-      msg.reply(
-        `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
-          (usernames.length / 30 + 1) *
-          5
-        ).toFixed(0)} secs.)`
-      );
-      const resArray = await getColResMap(metric, usernames);
-      const arrayOfObjects = await Promise.all(resArray);
-      const sortedResArray =
-        metric === 'pets'
-          ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
-          : arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
-      await Promise.all(sortedResArray);
-      msg.reply(buildMessage(sortedResArray, metric));
-      console.log('\nBatch process finished.');
-    } else {
-      const memberships = (await womClient.groups.getGroupDetails(groupId)).memberships;
-      const sortedMemberships = sortMembershipsByMetric(memberships, metric)
-        .filter((user) => !BLACKLIST.includes(user.player.displayName))
-        .slice(0, 10);
-      msg.reply(buildMessage(sortedMemberships, metric));
+    switch (metric) {
+      case 'pets':
+      case 'log':
+        const usernames = await getAllDisplayNames(groupId);
+
+        msg.reply(
+          `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
+            (usernames.length / 30 + 1) *
+            5
+          ).toFixed(0)} secs.)`
+        );
+
+        const resArray = await getColResMap(metric, usernames);
+        const arrayOfObjects = await Promise.all(resArray);
+
+        const sortedResArray =
+          metric === 'pets'
+            ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
+            : arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
+        await Promise.all(sortedResArray);
+
+        msg.reply(buildMessage(sortedResArray, metric));
+        console.log('\nBatch process finished.');
+        break;
+      case 'balance':
+        const sortedPointsArray = (await getAllPointsSorted())
+          .filter((user) => !BLACKLIST.includes(user.username))
+          .slice(0, 10);
+        msg.reply(buildMessage(sortedPointsArray, metric));
+        break;
+      default:
+        const memberships = (await womClient.groups.getGroupDetails(groupId)).memberships;
+        const sortedMemberships = sortMembershipsByMetric(memberships, metric)
+          .filter((user) => !BLACKLIST.includes(user.player.displayName))
+          .slice(0, 10);
+        msg.reply(buildMessage(sortedMemberships, metric));
+        break;
     }
   } catch (e) {
     topTenError(e, msg);
@@ -68,8 +82,9 @@ export async function getGroupCompetitions(msg, groupId) {
     const now = new Date();
     const ongoingComps = [];
     const futureComps = [];
-    let message = '';
     const competitions = await womClient.groups.getGroupCompetitions(groupId);
+    let message = '';
+
     competitions.forEach((comp) => {
       if (comp.startsAt < now && comp.endsAt > now) {
         ongoingComps.push(comp.title);
@@ -77,6 +92,7 @@ export async function getGroupCompetitions(msg, groupId) {
         futureComps.push(comp.title);
       }
     });
+
     ongoingComps.length > 0
       ? (message += `The ongoing competitions are: ${ongoingComps
           .map((c) => {
@@ -84,6 +100,7 @@ export async function getGroupCompetitions(msg, groupId) {
           })
           .join(', ')}`)
       : (message += 'There are currently no ongoing competitions');
+
     futureComps.length > 0
       ? (message += `The future competitions are: ${futureComps
           .map((c) => {
@@ -91,6 +108,7 @@ export async function getGroupCompetitions(msg, groupId) {
           })
           .join(', ')}`)
       : (message += '\n\nThere are currently no future competitions');
+
     msg.reply(message);
   } catch (e) {
     allCatcher(e, msg);
@@ -100,12 +118,14 @@ export async function getGroupCompetitions(msg, groupId) {
 export async function getCompCalendar(msg, groupId) {
   try {
     const now = new Date();
-    let message = '';
     const competitions = await womClient.groups.getGroupCompetitions(groupId);
     const compCalendar = [];
+    let message = '';
+
     competitions.forEach((comp) => {
       const startDt = DateTime.fromISO(comp.startsAt.toISOString()).setZone('Europe/London');
       const endDt = DateTime.fromISO(comp.endsAt.toISOString()).setZone('Europe/London');
+
       if ((comp.startsAt < now && comp.endsAt > now) || comp.startsAt > now) {
         compCalendar.push({
           title: comp.title,
@@ -120,6 +140,7 @@ export async function getCompCalendar(msg, groupId) {
         });
       }
     });
+
     message += `${compCalendar
       .sort((a, b) => a.startDt - b.startDt)
       .map((comp) => {
@@ -128,6 +149,7 @@ export async function getCompCalendar(msg, groupId) {
         )} ${comp.end} --- ${comp.endTime}**\n - ${comp.title}`;
       })
       .join('\n')}`;
+
     msg.reply(message);
   } catch (e) {
     allCatcher(e, msg);
@@ -137,10 +159,11 @@ export async function getCompCalendar(msg, groupId) {
 export async function getPlayerStats(msg, playerName) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
-    const playerDetails = await womClient.players.getPlayerDetails(playerName).then((json) => {
-      let output = `Here are the stats for ${displayName}:\n`;
+
+    await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.skills);
-      output += '```';
+      let output = `Here are the stats for ${displayName}:\n\`\`\``;
+
       array.forEach((skill) => {
         output += `${(toCapitalCase(skill.metric) + ': ').padEnd(14)}${skill.level
           .toString()
@@ -148,7 +171,9 @@ export async function getPlayerStats(msg, playerName) {
           skill.rank
         ).padStart(11)}   ${skill.ehp.toFixed(2).padStart(8)} EHP\n`;
       });
+
       output += '```';
+
       msg.reply(output);
     });
   } catch (e) {
@@ -160,7 +185,8 @@ export async function getPlayerBossStats(msg, playerName) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
     let output = `Here are the boss stats for ${displayName}:\n\`\`\``;
-    const playerDetails = await womClient.players.getPlayerDetails(playerName).then((json) => {
+
+    await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.bosses);
       array.forEach((boss) => {
         output += `${(Bosses[boss.metric] + ': ').padEnd(23)}${boss.kills
@@ -168,7 +194,9 @@ export async function getPlayerBossStats(msg, playerName) {
           .padStart(6)}  Rank ${numberWithCommas(boss.rank).padStart(11)}   ${boss.ehb.toFixed(2).padStart(8)} EHB\n`;
       });
     });
+
     output += '```';
+
     msg.reply(output);
   } catch (e) {
     playerError(e, msg);
@@ -178,16 +206,19 @@ export async function getPlayerBossStats(msg, playerName) {
 export async function getPlayerSkillStat(msg, metric, playerName) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
-    const playerStat = await womClient.players.getPlayerDetails(playerName).then((json) => {
+
+    await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.skills);
       const skillStats = array.filter((skill) => {
         return skill.metric === metric;
       })[0];
+
       let message = `Here are the ${Skills[toCapitalCase(skillStats.metric)]} stats for ${displayName}:\n\`\`\`Level: ${
         skillStats.level
       }\nExp: ${numberWithCommas(skillStats.experience)} Exp\nRank: ${numberWithCommas(
         skillStats.rank
       )}\nEHP: ${skillStats.ehp.toFixed(2)} hours\`\`\``;
+
       msg.reply(message);
     });
   } catch (e) {
@@ -198,16 +229,19 @@ export async function getPlayerSkillStat(msg, metric, playerName) {
 export async function getPlayerBossStat(msg, metric, playerName) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
-    const playerStat = await womClient.players.getPlayerDetails(playerName).then((json) => {
+
+    await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.bosses);
       const bossStats = array.filter((boss) => {
         return boss.metric === metric;
       })[0];
+
       let message = `Here are the ${
         Bosses[bossStats.metric]
       } stats for ${displayName}:\n\`\`\`Kills or completions: ${numberWithCommas(
         bossStats.kills
       )}\nRank: ${numberWithCommas(bossStats.rank)}\nEHB: ${bossStats.ehb.toFixed(2)} hours\`\`\``;
+
       msg.reply(message);
     });
   } catch (e) {
@@ -220,6 +254,7 @@ export function getCommands(msg) {
     const message = `The Degeneration bot supports the following commands:\n\`\`\`${COMMAND_MESSAGES.join(
       ''
     )}\nThe boss_identifier is typically the name of the boss in lowercase, separated by underscores, e.g. thermonuclear_smoke_devil or chambers_of_xeric. We are working on allowing certain common abbreviations as well (e.g. cox or tob or thermy, etc...).\`\`\``;
+
     msg.reply(message);
   } catch (e) {
     allCatcher(e, msg);
@@ -229,6 +264,7 @@ export function getCommands(msg) {
 export function getClanRankCalculator(msg) {
   try {
     const attachment = new AttachmentBuilder('public/files/Clan_Rank_Calculator_v3.2.xlsx');
+
     msg.reply({
       content: 'Here is the Clan Rank Calculator:',
       files: [attachment]
@@ -316,6 +352,7 @@ export async function getResults(msg, id, type) {
   try {
     let winner;
     let secondPlace;
+
     return await womClient.competitions
       .getCompetitionDetails(id)
       .then((json) => {

@@ -100,12 +100,7 @@ async function listUsersPoints(auth) {
 
 export async function getPointsByUsername(username) {
   // First make sure the local coins file is up to date with the spreadsheet (SSOT)
-  const auth = await authorize();
-  try {
-    await listUsersPoints(auth);
-  } catch (e) {
-    console.error(e);
-  }
+  updatePointsFile();
 
   const file = await fs.readFile('public/output/regen-points.txt', 'utf-8');
   const lines = file.split('\n');
@@ -121,7 +116,39 @@ export async function getPointsByUsername(username) {
   return pointValue;
 }
 
-getPointsByUsername('regen Matt');
+// getPointsByUsername('regen Matt');
+
+export async function updatePointsFile() {
+  const auth = await authorize();
+  try {
+    await listUsersPoints(auth);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export async function getAllPointsSorted() {
+  updatePointsFile();
+
+  const file = await fs.readFile('public/output/regen-points.txt', 'utf-8');
+  const lines = file.split('\n');
+
+  return lines
+    .sort((lineA, lineB) => {
+      const [_userA, pointsA] = lineA.split(',');
+      const [_userB, pointsB] = lineB.split(',');
+
+      return pointsB - pointsA;
+    })
+    .map((line) => {
+      const [username, points] = line.split(',');
+      return {
+        username,
+        points
+      };
+    });
+}
+
 //
 //
 //

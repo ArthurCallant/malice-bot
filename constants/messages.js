@@ -14,6 +14,7 @@ export const COMMAND_MESSAGES = [
     8
   )} displays a list of the top 10 players that have the highest amount of unique collection log slots\n`,
   `${'?pets'.padEnd(8)} displays a list of the top 10 players that have the highest amount of unique pets\n`,
+  `${'?rgn'.padEnd(8)} displays a list of the top 10 players that have the highest amount of Regencoins\n`,
   `${'?stats'.padEnd(8)} displays all of the skilling stats of a player. usage: ?stats <player_name>\n`,
   `${'?lvl'.padEnd(
     8

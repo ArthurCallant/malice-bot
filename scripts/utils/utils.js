@@ -33,64 +33,85 @@ export function sortMembershipsByMetric(memberships, metric) {
   }
 }
 
+function formatDisplayNameForTopTen(position, username) {
+  return `${((position + 1).toString() + '.').padEnd(3)} ${username.padEnd(12)}`;
+}
+
 export function buildMessage(sortedMemberships, metric) {
   let message = 'The following players are the members of Regeneration that ';
-  if (metric === 'ttm') {
-    message += 'are closest to maxing:\n';
-    message += `\`\`\`${sortedMemberships
-      .map((m, i) => {
-        return `${((i + 1).toString() + '.').padEnd(3)} ${m.player.displayName.padEnd(12)}: ${(
-          m.player.ttm.toFixed(2) + ' hours left.'
-        ).padStart(18)}`;
-      })
-      .join('\n')}\`\`\``;
-  } else if (metric === 'exp') {
-    message += 'have the highest amount of Exp:\n';
-    message += `\`\`\`${sortedMemberships
-      .map((m, i) => {
-        return `${((i + 1).toString() + '.').padEnd(3)} ${m.player.displayName.padEnd(12)}: ${(
-          numberWithCommas(m.player.exp) + ' Exp.'
-        ).padStart(18)}`;
-      })
-      .join('\n')}\`\`\``;
-  } else if (metric === 'ehb') {
-    message += 'have the highest amount of Efficient Hours Bossed:\n';
-    message += `\`\`\`${sortedMemberships
-      .map((m, i) => {
-        return `${((i + 1).toString() + '.').padEnd(3)} ${m.player.displayName.padEnd(12)}: ${(
-          m.player.ehb.toFixed(2) + ' EHB.'
-        ).padStart(15)}`;
-      })
-      .join('\n')}\`\`\``;
-  } else if (metric === 'ehp') {
-    message += 'have the highest amount of Efficient Hours Played:\n';
-    message += `\`\`\`${sortedMemberships
-      .map((m, i) => {
-        return `${((i + 1).toString() + '.').padEnd(3)} ${m.player.displayName.padEnd(12)}: ${(
-          m.player.ehp.toFixed(2) + ' EHP.'
-        ).padStart(15)}`;
-      })
-      .join('\n')}\`\`\``;
-  } else if (metric === 'log') {
-    message += 'have the highest amount of unique Collection Log slots:\n';
-    message += `\`\`\`${sortedMemberships
-      .slice(0, 10)
-      .map((user, index) => {
-        return `${((index + 1).toString() + '.').padEnd(3)} ${user.username.padEnd(12)}: ${(
-          user.uniqueObtained + ' collection log slots.'
-        ).padStart(18)}`;
-      })
-      .join('\n')}\`\`\``;
-  } else if (metric === 'pets') {
-    message += 'have the highest amount of unique pets:\n';
-    message += `\`\`\`${sortedMemberships
-      .slice(0, 10)
-      .map((user, index) => {
-        return `${((index + 1).toString() + '.').padEnd(3)} ${user.username.padEnd(12)}: ${(
-          user.pets + ' pets.'
-        ).padStart(8)}`;
-      })
-      .join('\n')}\`\`\``;
+  switch (metric) {
+    case 'ttm':
+      message += 'are closest to maxing:\n';
+      message += `\`\`\`${sortedMemberships
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
+            m.player.ttm.toFixed(2) + ' hours left.'
+          ).padStart(18)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'exp':
+      message += 'have the highest amount of Exp:\n';
+      message += `\`\`\`${sortedMemberships
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
+            numberWithCommas(m.player.exp) + ' Exp.'
+          ).padStart(18)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'ehb':
+      message += 'have the highest amount of Efficient Hours Bossed:\n';
+      message += `\`\`\`${sortedMemberships
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
+            m.player.ehb.toFixed(2) + ' EHB.'
+          ).padStart(15)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'ehp':
+      message += 'have the highest amount of Efficient Hours Played:\n';
+      message += `\`\`\`${sortedMemberships
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
+            m.player.ehp.toFixed(2) + ' EHP.'
+          ).padStart(15)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'log':
+      message += 'have the highest amount of unique Collection Log slots:\n';
+      message += `\`\`\`${sortedMemberships
+        .slice(0, 10)
+        .map((user, index) => {
+          return `${formatDisplayNameForTopTen(index, user.username)}: ${(
+            user.uniqueObtained + '  collection log slots.'
+          ).padStart(18)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'pets':
+      message += 'have the highest amount of unique pets:\n';
+      message += `\`\`\`${sortedMemberships
+        .slice(0, 10)
+        .map((user, index) => {
+          return `${formatDisplayNameForTopTen(index, user.username)}: ${(user.pets.toFixed(2) + ' pets.').padStart(
+            8
+          )}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    case 'balance':
+      message += 'have the highest amount of Regencoins:\n';
+      message += `\`\`\`${sortedMemberships
+        .map((user, index) => {
+          return `${formatDisplayNameForTopTen(index, user.username)}: ${(user.points + ' Regencoins.').padStart(10)}`;
+        })
+        .join('\n')}\`\`\``;
+      break;
+    default:
+      break;
   }
   return message;
 }

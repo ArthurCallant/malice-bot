@@ -81,6 +81,9 @@ client.on('messageCreate', (msg) => {
     case '?ehp':
       getTopTen(msg, groupId, 'ehp');
       break;
+    case '?rgn':
+      getTopTen(msg, groupId, 'balance');
+      break;
     // Not necessary, old school bot already has a similar, better feature
     // case "?stats":
     //     playerName = args.join(" ").toString();
