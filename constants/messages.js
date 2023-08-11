@@ -5,7 +5,7 @@ export const COMMAND_MESSAGES = [
   `${'?sotw'.padEnd(8)} displays the top 5 for a Skill of the Week competition. usage: ?sotw <competition_id>\n`,
   `${'?botw'.padEnd(8)} displays the top 5 for a Boss of the Week competition. usage: ?botw <competition_id>\n`,
   `${'?comps'.padEnd(8)} Displays all of the ongoing and future competitions\n`,
-  `?calendar Displays the clan's event calendar in a readable format for ongoing and future events`,
+  `?calendar Displays the clan's event calendar in a readable format for ongoing and future events\n`,
   `${'?ttm'.padEnd(8)} displays a list of the 10 players that are closest to maxing in ehp\n`,
   `${'?exp'.padEnd(8)} displays a list of the top 10 players that have the most total exp\n`,
   `${'?ehb'.padEnd(8)} displays a list of the top 10 players that have the most ehb (efficient hours bossed)\n`,
