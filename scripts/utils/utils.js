@@ -1,4 +1,5 @@
 import { writeFile } from 'fs';
+import { DateTime } from 'luxon';
 
 export function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -125,4 +126,16 @@ export function logUsernames(usernames) {
     }
     console.log('A file has been created with errorred usernames');
   });
+}
+
+export function getPeriod(periodStart, periodEnd) {
+  const baseDate = DateTime.now();
+  const startDate = periodStart
+    ? DateTime.fromObject({ day: periodStart.day, month: periodStart.month, year: periodStart.year }).toISO()
+    : baseDate.startOf('month').toISO();
+  const endDate = periodEnd
+    ? DateTime.fromObject({ day: periodEnd.day, month: periodEnd.month, year: periodEnd.year }).toISO()
+    : baseDate.endOf('month').toISO();
+
+  return { startDate, endDate };
 }
