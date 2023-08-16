@@ -141,14 +141,18 @@ export async function getCompCalendar(msg, groupId) {
       }
     });
 
-    message += `${compCalendar
-      .sort((a, b) => a.startDt - b.startDt)
-      .map((comp) => {
-        return `**${toCapitalCase(comp.startDay)} ${comp.start} --- ${comp.startTime}    until    ${toCapitalCase(
-          comp.endDay
-        )} ${comp.end} --- ${comp.endTime}**\n - ${comp.title}`;
-      })
-      .join('\n')}`;
+    if (!compCalendar.length) {
+      message = "I'm sorry, it seems there are currently no upcoming competitions. Please check again at a later date.";
+    } else {
+      message += `${compCalendar
+        .sort((a, b) => a.startDt - b.startDt)
+        .map((comp) => {
+          return `**${toCapitalCase(comp.startDay)} ${comp.start} --- ${comp.startTime}    until    ${toCapitalCase(
+            comp.endDay
+          )} ${comp.end} --- ${comp.endTime}**\n - ${comp.title}`;
+        })
+        .join('\n')}`;
+    }
 
     msg.reply(message);
   } catch (e) {
