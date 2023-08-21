@@ -84,6 +84,10 @@ client.on('messageCreate', (msg) => {
     case '?rgn':
       getTopTen(msg, groupId, 'balance');
       break;
+    case '?month':
+      let metric = args.shift().toLowerCase();
+      getMonthlyGains(msg, groupId, metric);
+      break;
     // Not necessary, old school bot already has a similar, better feature
     // case "?stats":
     //     playerName = args.join(" ").toString();

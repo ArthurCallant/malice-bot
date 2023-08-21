@@ -77,6 +77,36 @@ export async function getTopTen(msg, groupId, metric) {
   }
 }
 
+export async function getMonthlyGains(msg, groupId, metric) {
+  const gainsPeriod = getPeriod({ day: 1, month: 4, year: 2023 });
+  let statistics;
+  switch (metric) {
+    case 'ehb':
+      statistics = await womClient.groups.getGroupGains(
+        groupId,
+        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
+        { limit: 20 }
+      );
+      break;
+    case 'ehp':
+      statistics = await womClient.groups.getGroupGains(
+        groupId,
+        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehp' },
+        { limit: 20 }
+      );
+      break;
+    case 'exp':
+      statistics = await womClient.groups.getGroupGains(
+        groupId,
+        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
+        { limit: 20 }
+      );
+      break;
+    default:
+      break;
+  }
+}
+
 export async function getGroupCompetitions(msg, groupId) {
   try {
     const now = new Date();
