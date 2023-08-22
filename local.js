@@ -34,7 +34,7 @@ const endDay = 31;
 const month = 5;
 const year = 2023;
 
-getMonthlyGains(null, groupId, { startDay: startDay, endDay: endDay, month: month, year: year });
+getMonthlyGains(null, groupId, { month: undefined, year: undefined });
 // getMonthlyGains(null, groupId);
 // console.log(startDate);
 // console.log(endDate);
