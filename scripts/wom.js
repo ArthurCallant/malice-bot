@@ -128,24 +128,21 @@ export async function getMonthlyGains(msg, groupId, periodObject = {}) {
       .map((m, i) => {
         return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(18)}`;
       })
-      .join('\n')}
-    \`\`\`
+      .join('\n')}\`\`\`
     EHB:\n\`\`\`${ehbStats
       .filter((user) => !BLACKLIST.includes(user.username))
       .slice(0, 10)
       .map((m, i) => {
         return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
       })
-      .join('\n')}
-    \`\`\`
+      .join('\n')}\`\`\`
     EHP:\n\`\`\`${ehpStats
       .filter((user) => !BLACKLIST.includes(user.username))
       .slice(0, 10)
       .map((m, i) => {
         return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
       })
-      .join('\n')}
-    \`\`\`
+      .join('\n')}\`\`\`
     `;
     msg.reply(message);
   } catch (e) {
