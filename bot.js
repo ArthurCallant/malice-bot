@@ -89,7 +89,7 @@ client.on('messageCreate', (msg) => {
       const monthArg = args.shift();
       const yearArg = args.shift();
       const month = !isNaN(parseInt(monthArg)) ? parseInt(monthArg) : undefined;
-      const year = parseInt(yearArg) ? parseInt(yearArg) : undefined;
+      const year = !isNaN(parseInt(yearArg)) ? parseInt(yearArg) : undefined;
       getMonthlyGains(msg, groupId, { month: month, year: year });
       break;
     // Not necessary, old school bot already has a similar, better feature
