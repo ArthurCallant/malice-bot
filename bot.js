@@ -8,6 +8,7 @@ import {
   getCommands,
   getCompCalendar,
   getGroupCompetitions,
+  getMonthlyGains,
   getPlayerBossStat,
   getPlayerSkillStat,
   getResults,
@@ -122,6 +123,12 @@ client.on('messageCreate', (msg) => {
     //     boss = args.shift().toLowerCase();
     //     getBossSnapshotCsv(msg, groupId, boss);
     //     break;
+    case '?rgncup':
+      const startDay = args.shift();
+      const endDay = args.shift();
+      const month = args.shift();
+      const year = args.shift();
+      getMonthlyGains(mgs, groupId, { startDay, endDay, month, year });
     default:
       break;
   }

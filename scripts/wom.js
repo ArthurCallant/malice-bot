@@ -9,7 +9,10 @@ import {
   top5members,
   numberWithCommas,
   toCapitalCase,
-  logUsernames
+  logUsernames,
+  formatDisplayNameForTopTen,
+  getPeriod,
+  getPeriodObjectFromValues
 } from './utils/utils.js';
 import { getAllPointsSorted, getPointsByUsername } from '../scripts/points.js';
 import { AttachmentBuilder } from 'discord.js';
@@ -77,34 +80,73 @@ export async function getTopTen(msg, groupId, metric) {
   }
 }
 
-export async function getMonthlyGains(msg, groupId, metric) {
-  const gainsPeriod = getPeriod({ day: 1, month: 4, year: 2023 });
-  let statistics;
-  switch (metric) {
-    case 'ehb':
-      statistics = await womClient.groups.getGroupGains(
-        groupId,
-        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
-        { limit: 20 }
-      );
-      break;
-    case 'ehp':
-      statistics = await womClient.groups.getGroupGains(
-        groupId,
-        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehp' },
-        { limit: 20 }
-      );
-      break;
-    case 'exp':
-      statistics = await womClient.groups.getGroupGains(
-        groupId,
-        { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
-        { limit: 20 }
-      );
-      break;
-    default:
-      break;
-  }
+export async function getMonthlyGains(msg, groupId, periodObject = {}) {
+  const periodStart = getPeriodObjectFromValues({ periodObject });
+  const gainsPeriod = getPeriod(periodStart);
+
+  const foo = await womClient.groups.getGroupGains(
+    groupId,
+    { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
+    { limit: 20 }
+  );
+  const ehbStats = foo.map((p) => {
+    return {
+      username: p.player.displayName,
+      gained: p.data.gained
+    };
+  });
+
+  const bar = await womClient.groups.getGroupGains(
+    groupId,
+    { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehp' },
+    { limit: 20 }
+  );
+  const ehpStats = bar.map((p) => {
+    return {
+      username: p.player.displayName,
+      gained: p.data.gained
+    };
+  });
+
+  const baz = await womClient.groups.getGroupGains(
+    groupId,
+    { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
+    { limit: 20 }
+  );
+  const expStats = baz.map((p) => {
+    return {
+      username: p.player.displayName,
+      gained: p.data.gained
+    };
+  });
+
+  const message = `Here is this month's leaderboard results:\n
+  Overall EXP:\n\`\`\`${expStats
+    .filter((user) => !BLACKLIST.includes(user.username))
+    .slice(0, 10)
+    .map((m, i) => {
+      return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(18)}`;
+    })
+    .join('\n')}
+  \`\`\`
+  EHB:\n\`\`\`${ehbStats
+    .filter((user) => !BLACKLIST.includes(user.username))
+    .slice(0, 10)
+    .map((m, i) => {
+      return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
+    })
+    .join('\n')}
+  \`\`\`
+  EHP:\n\`\`\`${ehpStats
+    .filter((user) => !BLACKLIST.includes(user.username))
+    .slice(0, 10)
+    .map((m, i) => {
+      return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
+    })
+    .join('\n')}
+  \`\`\`
+  `;
+  msg.reply(message);
 }
 
 export async function getGroupCompetitions(msg, groupId) {

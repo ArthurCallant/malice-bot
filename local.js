@@ -2,8 +2,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { WOMClient } from '@wise-old-man/utils';
 import { getAllPointsSorted } from './scripts/points.js';
-import { buildMessage, getPeriod } from './scripts/utils/utils.js';
+import { buildMessage, getPeriodObjectFromValues, getPeriod } from './scripts/utils/utils.js';
 import { BLACKLIST } from './constants/blacklist.js';
+import { getMonthlyGains } from './scripts/wom.js';
 
 const Period = {
   FIVE_MIN: 'five_min',
@@ -23,19 +24,60 @@ const Period = {
 const womClient = new WOMClient();
 const groupId = process.env.GROUP_ID;
 
-const gainsPeriod = getPeriod({ day: 1, month: 4, year: 2023 });
+// const dateObject = getPeriodObjectFromValues({});
+// console.log(dateObject);
+// const startDate = { day: dateObject.startDay, month: dateObject.month, year: dateObject.year };
+// const endDate = { day: dateObject.endDay, month: dateObject.month, year: dateObject.year };
 
-const statistics = await womClient.groups.getGroupGains(
-  groupId,
-  { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
-  { limit: 20 }
-);
+getMonthlyGains(null, groupId);
+// console.log(startDate);
+// console.log(endDate);
 
-console.log(
-  statistics.map((p) => {
-    return {
-      username: p.player.displayName,
-      gained: p.gained
-    };
-  })
-);
+// const gainsPeriod = getPeriod(startDate, endDate);
+
+// const overall = await womClient.groups.getGroupGains(
+//   groupId,
+//   { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
+//   { limit: 20 }
+// );
+
+// const ehb = await womClient.groups.getGroupGains(
+//   groupId,
+//   { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
+//   { limit: 20 }
+// );
+
+// const ehp = await womClient.groups.getGroupGains(
+//   groupId,
+//   { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehp' },
+//   { limit: 20 }
+// );
+
+// console.log(statistics);
+
+// console.log(
+//   overall.map((p) => {
+//     return {
+//       username: p.player.displayName,
+//       gained: p.data.gained
+//     };
+//   })
+// );
+
+// console.log(
+//   ehb.map((p) => {
+//     return {
+//       username: p.player.displayName,
+//       gained: p.data.gained
+//     };
+//   })
+// );
+
+// console.log(
+//   ehp.map((p) => {
+//     return {
+//       username: p.player.displayName,
+//       gained: p.data.gained
+//     };
+//   })
+// );
