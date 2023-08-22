@@ -82,8 +82,11 @@ export async function getTopTen(msg, groupId, metric) {
 
 export async function getMonthlyGains(msg, groupId, periodObject = {}) {
   try {
-    const periodStart = getPeriodObjectFromValues({ periodObject });
-    const gainsPeriod = getPeriod(periodStart);
+    const period = getPeriodObjectFromValues(periodObject);
+    const gainsPeriod = getPeriod(
+      { day: period.startDay, month: period.month, year: period.year },
+      { day: period.endDay, month: period.month, year: period.year }
+    );
 
     const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
     const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');

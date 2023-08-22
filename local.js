@@ -29,7 +29,13 @@ const groupId = process.env.GROUP_ID;
 // const startDate = { day: dateObject.startDay, month: dateObject.month, year: dateObject.year };
 // const endDate = { day: dateObject.endDay, month: dateObject.month, year: dateObject.year };
 
-getMonthlyGains(null, groupId);
+const startDay = 1;
+const endDay = 31;
+const month = 5;
+const year = 2023;
+
+getMonthlyGains(null, groupId, { startDay: startDay, endDay: endDay, month: month, year: year });
+// getMonthlyGains(null, groupId);
 // console.log(startDate);
 // console.log(endDate);
 

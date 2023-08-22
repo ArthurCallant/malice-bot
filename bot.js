@@ -86,8 +86,11 @@ client.on('messageCreate', (msg) => {
       getTopTen(msg, groupId, 'balance');
       break;
     case '?month':
-      let metric = args.shift().toLowerCase();
-      getMonthlyGains(msg, groupId, metric);
+      const startDay = args.shift();
+      const endDay = args.shift();
+      const month = args.shift();
+      const year = args.shift();
+      getMonthlyGains(msg, groupId, { startDay: startDay, endDay: endDay, month: month, year: year });
       break;
     // Not necessary, old school bot already has a similar, better feature
     // case "?stats":
@@ -123,12 +126,6 @@ client.on('messageCreate', (msg) => {
     //     boss = args.shift().toLowerCase();
     //     getBossSnapshotCsv(msg, groupId, boss);
     //     break;
-    case '?rgncup':
-      const startDay = args.shift();
-      const endDay = args.shift();
-      const month = args.shift();
-      const year = args.shift();
-      getMonthlyGains(msg, groupId, { startDay, endDay, month, year });
     default:
       break;
   }
