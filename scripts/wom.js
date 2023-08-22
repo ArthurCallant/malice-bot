@@ -85,6 +85,9 @@ export async function getMonthlyGains(msg, groupId, periodObject = {}) {
     const periodStart = getPeriodObjectFromValues({ periodObject });
     const gainsPeriod = getPeriod(periodStart);
 
+    const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
+    const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');
+
     const foo = await womClient.groups.getGroupGains(
       groupId,
       { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
@@ -121,7 +124,7 @@ export async function getMonthlyGains(msg, groupId, periodObject = {}) {
       };
     });
 
-    const message = `Here is this month's leaderboard results:\n
+    const message = `Here is the monthly leaderboard results for ${sdString} - ${edString}:\n
     Overall EXP:\n\`\`\`${expStats
       .filter((user) => !BLACKLIST.includes(user.username))
       .slice(0, 10)
