@@ -86,8 +86,10 @@ client.on('messageCreate', (msg) => {
       getTopTen(msg, groupId, 'balance');
       break;
     case '?month':
-      const month = parseInt(args.shift()) ?? undefined;
-      const year = parseInt(args.shift()) ?? undefined;
+      const monthArg = args.shift();
+      const yearArg = args.shift();
+      const month = !isNaN(parseInt(monthArg)) ? parseInt(monthArg) : undefined;
+      const year = parseInt(yearArg) ? parseInt(yearArg) : undefined;
       getMonthlyGains(msg, groupId, { month: month, year: year });
       break;
     // Not necessary, old school bot already has a similar, better feature
