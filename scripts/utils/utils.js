@@ -128,38 +128,27 @@ export function logUsernames(usernames) {
   });
 }
 
-export function getCurrentMonthPeriodValues() {
+function getCurrentDateObject() {
   const date = DateTime.now();
-  const startDay = date.startOf('month').day;
-  const endDay = date.endOf('month').day;
   const month = date.month;
   const year = date.year;
 
   return {
-    startDay,
-    endDay,
     month,
     year
   };
 }
 
-export function getPeriodObjectFromValues({
-  startDay = getCurrentMonthPeriodValues().startDay,
-  endDay = getCurrentMonthPeriodValues().endDay,
-  month = getCurrentMonthPeriodValues().month,
-  year = getCurrentMonthPeriodValues().year
+export function getStartToEndPeriod({
+  day = 1,
+  month = getCurrentDateObject().month,
+  year = getCurrentDateObject().year
 }) {
-  return { startDay: startDay, endDay: endDay, month: month, year: year };
-}
+  const startDate = DateTime.fromObject({ day: day, month: month, year: year });
+  const endDate = startDate.endOf('month');
 
-export function getPeriod(periodStart, periodEnd) {
-  const baseDate = DateTime.now();
-  const startDate = periodStart
-    ? DateTime.fromObject({ day: periodStart.day, month: periodStart.month, year: periodStart.year }).toISO()
-    : baseDate.startOf('month').toISO();
-  const endDate = periodEnd
-    ? DateTime.fromObject({ day: periodEnd.day, month: periodEnd.month, year: periodEnd.year }).endOf('month').toISO()
-    : baseDate.endOf('month').toISO();
-
-  return { startDate, endDate };
+  return {
+    startDate: startDate.toISO(),
+    endDate: endDate.toISO()
+  };
 }

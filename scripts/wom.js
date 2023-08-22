@@ -11,8 +11,7 @@ import {
   toCapitalCase,
   logUsernames,
   formatDisplayNameForTopTen,
-  getPeriod,
-  getPeriodObjectFromValues
+  getStartToEndPeriod
 } from './utils/utils.js';
 import { getAllPointsSorted, getPointsByUsername } from '../scripts/points.js';
 import { AttachmentBuilder } from 'discord.js';
@@ -82,11 +81,7 @@ export async function getTopTen(msg, groupId, metric) {
 
 export async function getMonthlyGains(msg, groupId, periodObject = {}) {
   try {
-    const period = getPeriodObjectFromValues(periodObject);
-    const gainsPeriod = getPeriod(
-      { day: period.startDay, month: period.month, year: period.year },
-      { day: period.endDay, month: period.month, year: period.year }
-    );
+    const gainsPeriod = getStartToEndPeriod(periodObject);
 
     const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
     const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');
