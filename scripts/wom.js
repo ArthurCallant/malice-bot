@@ -10,8 +10,8 @@ import {
   numberWithCommas,
   toCapitalCase,
   logUsernames,
-  formatDisplayNameForTopTen,
-  getStartToEndPeriod
+  getStartToEndPeriod,
+  fetchGroupGains
 } from './utils/utils.js';
 import { getAllPointsSorted, getPointsByUsername } from '../scripts/points.js';
 import { AttachmentBuilder } from 'discord.js';
@@ -86,65 +86,17 @@ export async function getMonthlyGains(msg, groupId, periodObject = {}) {
     const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
     const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');
 
-    const foo = await womClient.groups.getGroupGains(
-      groupId,
-      { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehb' },
-      { limit: 20 }
-    );
-    const ehbStats = foo.map((p) => {
-      return {
-        username: p.player.displayName,
-        gained: p.data.gained
-      };
-    });
+    const ehbStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'ehb');
+    const ehpStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'ehp');
+    const expStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'overall');
 
-    const bar = await womClient.groups.getGroupGains(
-      groupId,
-      { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'ehp' },
-      { limit: 20 }
-    );
-    const ehpStats = bar.map((p) => {
-      return {
-        username: p.player.displayName,
-        gained: p.data.gained
-      };
+    const message = buildMessage([], 'month', {
+      sdString: sdString,
+      edString: edString,
+      expStats: expStats,
+      ehbStats: ehbStats,
+      ehpStats: ehpStats
     });
-
-    const baz = await womClient.groups.getGroupGains(
-      groupId,
-      { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: 'overall' },
-      { limit: 20 }
-    );
-    const expStats = baz.map((p) => {
-      return {
-        username: p.player.displayName,
-        gained: p.data.gained
-      };
-    });
-
-    const message = `Here is the monthly leaderboard results for ${sdString} - ${edString}:\n
-    Overall EXP:\n\`\`\`${expStats
-      .filter((user) => !BLACKLIST.includes(user.username))
-      .slice(0, 10)
-      .map((m, i) => {
-        return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(18)}`;
-      })
-      .join('\n')}\`\`\`
-    EHB:\n\`\`\`${ehbStats
-      .filter((user) => !BLACKLIST.includes(user.username))
-      .slice(0, 10)
-      .map((m, i) => {
-        return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
-      })
-      .join('\n')}\`\`\`
-    EHP:\n\`\`\`${ehpStats
-      .filter((user) => !BLACKLIST.includes(user.username))
-      .slice(0, 10)
-      .map((m, i) => {
-        return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
-      })
-      .join('\n')}\`\`\`
-    `;
     msg.reply(message);
   } catch (e) {
     allCatcher(e, msg);

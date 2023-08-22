@@ -1,3 +1,4 @@
+import { BLACKLIST } from '../../constants/blacklist.js';
 import { writeFile } from 'fs';
 import { DateTime } from 'luxon';
 
@@ -38,7 +39,7 @@ export function formatDisplayNameForTopTen(position, username) {
   return `${((position + 1).toString() + '.').padEnd(3)} ${username.padEnd(12)}`;
 }
 
-export function buildMessage(sortedMemberships, metric) {
+export function buildMessage(sortedMemberships, metric, options = {}) {
   let message = 'The following players are the members of Regeneration that ';
   switch (metric) {
     case 'ttm':
@@ -111,6 +112,30 @@ export function buildMessage(sortedMemberships, metric) {
         })
         .join('\n')}\`\`\``;
       break;
+    case 'month':
+      message = `Here is the monthly leaderboard results for ${options.sdString} - ${options.edString}:\n
+      Overall EXP:\n\`\`\`${options.expStats
+        .filter((user) => !BLACKLIST.includes(user.username))
+        .slice(0, 10)
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(18)}`;
+        })
+        .join('\n')}\`\`\`
+      EHB:\n\`\`\`${options.ehbStats
+        .filter((user) => !BLACKLIST.includes(user.username))
+        .slice(0, 10)
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
+        })
+        .join('\n')}\`\`\`
+      EHP:\n\`\`\`${options.ehpStats
+        .filter((user) => !BLACKLIST.includes(user.username))
+        .slice(0, 10)
+        .map((m, i) => {
+          return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
+        })
+        .join('\n')}\`\`\`
+      `;
     default:
       break;
   }
@@ -151,4 +176,21 @@ export function getStartToEndPeriod({
     startDate: startDate.toISO(),
     endDate: endDate.toISO()
   };
+}
+
+export async function fetchGroupGains(womClient, groupId, gainsPeriod, metric) {
+  return await womClient.groups
+    .getGroupGains(
+      groupId,
+      { startDate: gainsPeriod.startDate, endDate: gainsPeriod.endDate, metric: metric },
+      { limit: 20 }
+    )
+    .then((result) =>
+      result.map((p) => {
+        return {
+          username: p.player.displayName,
+          gained: p.data.gained
+        };
+      })
+    );
 }
