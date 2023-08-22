@@ -128,7 +128,7 @@ client.on('messageCreate', (msg) => {
       const endDay = args.shift();
       const month = args.shift();
       const year = args.shift();
-      getMonthlyGains(mgs, groupId, { startDay, endDay, month, year });
+      getMonthlyGains(msg, groupId, { startDay, endDay, month, year });
     default:
       break;
   }
