@@ -1,4 +1,4 @@
-import { rollDice } from './utils/utils';
+import { rollDice } from './utils/utils.js';
 
 export function getDiceRoll(msg, user) {
   const diceRoll = rollDice();
