@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { WOMClient } from '@wise-old-man/utils';
 import { getMonthlyGains } from './scripts/wom.js';
+import { rollDice } from './scripts/utils/utils.js';
 
 const Period = {
   FIVE_MIN: 'five_min',
@@ -21,7 +22,4 @@ const Period = {
 const womClient = new WOMClient();
 const groupId = process.env.GROUP_ID;
 
-const month = 5;
-const year = 2023;
-
-getMonthlyGains(null, groupId, { month: month, year: year });
+console.log(rollDice());

@@ -16,6 +16,7 @@ import {
 } from './scripts/wom.js';
 import http from 'http';
 import { ACTIVITIES } from './constants/messages.js';
+import { getDiceRoll } from './scripts/bingo.js';
 
 http
   .createServer(function (req, res) {
@@ -126,6 +127,8 @@ client.on('messageCreate', (msg) => {
     //     boss = args.shift().toLowerCase();
     //     getBossSnapshotCsv(msg, groupId, boss);
     //     break;
+    case '?roll':
+      getDiceRoll(msg);
     default:
       break;
   }
