@@ -1,10 +1,10 @@
 # Degeneration
 
-A discord bot for the OldSchool Runescape clan "Regeneration"
+A discord bot for the OldSchool Runescape clan "Regeneration". The development happens with TypeScript, which is then transpiled to JavaScript for the live version.
 
 ## Local setup
 
-- This app requires node `18.12.1` (tip: use n to manage node versions)
+- This app requires node `18.17.1` (tip: use n to manage node versions)
 - `npm install`
 - `npm run start`
 
