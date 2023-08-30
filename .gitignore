@@ -6,4 +6,3 @@ replit.nix
 */output/*
 credentials.json
 token.json
-out
