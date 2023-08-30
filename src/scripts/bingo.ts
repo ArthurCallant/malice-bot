@@ -1,7 +1,8 @@
-import { allCatcher } from './errors/handling.js';
-import { rollDice } from './utils/utils.js';
+import { Message } from 'discord.js';
+import { allCatcher } from './errors/handling';
+import { rollDice } from './utils/utils';
 
-export function getDiceRoll(msg) {
+export function getDiceRoll(msg: Message) {
   try {
     const diceRoll = rollDice();
     const author = `${msg.author.username}`;

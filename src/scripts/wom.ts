@@ -1,7 +1,7 @@
-import { WOMClient } from '@wise-old-man/utils';
+import { WOMClient, CompetitionDetails } from '@wise-old-man/utils';
 import axios from 'axios';
 import { Bosses, Skills } from '../constants/enums.js';
-import { allCatcher, incorrectId, playerError, topTenError } from './errors/handling.js';
+import { allCatcher, incorrectId, playerError, topTenError } from './errors/handling';
 import {
   buildMessage,
   jsonToOutput,
@@ -12,17 +12,17 @@ import {
   logUsernames,
   getStartToEndPeriod,
   fetchGroupGains
-} from './utils/utils.js';
-import { getAllPointsSorted, getPointsByUsername } from '../scripts/points.js';
-import { AttachmentBuilder } from 'discord.js';
+} from './utils/utils';
+import { getAllPointsSorted, getPointsByUsername } from './points';
+import { AttachmentBuilder, Message } from 'discord.js';
 import { COMMAND_MESSAGES } from '../constants/messages.js';
 import { DateTime } from 'luxon';
-import { BLACKLIST } from '../constants/blacklist.js';
-import { writeFile } from 'fs';
+import { BLACKLIST } from '../constants/blacklist';
+import { CompetitionCalendar, Metric, Period, Type } from '../constants/application.types';
 
 const womClient = new WOMClient();
 
-export async function getAllDisplayNames(groupId) {
+export async function getAllDisplayNames(groupId: number) {
   try {
     const memberships = (await womClient.groups.getGroupDetails(groupId)).memberships;
     const displayNames = memberships.map((p) => {
@@ -34,31 +34,12 @@ export async function getAllDisplayNames(groupId) {
   }
 }
 
-export async function getTopTen(msg, groupId, metric) {
+export async function getTopTen(msg: Message, groupId: number, metric: Metric) {
   try {
     switch (metric) {
       case 'pets':
       case 'log':
-        const usernames = await getAllDisplayNames(groupId);
-
-        msg.reply(
-          `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
-            (usernames.length / 30 + 1) *
-            5
-          ).toFixed(0)} secs.)`
-        );
-
-        const resArray = await getColResMap(metric, usernames);
-        const arrayOfObjects = await Promise.all(resArray);
-
-        const sortedResArray =
-          metric === 'pets'
-            ? arrayOfObjects.sort((a, b) => b.pets - a.pets)
-            : arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
-        await Promise.all(sortedResArray);
-
-        msg.reply(buildMessage(sortedResArray, metric));
-        console.log('\nBatch process finished.');
+        getPetsOrLogTopTen(msg, groupId, metric);
         break;
       case 'balance':
         const sortedPointsArray = (await getAllPointsSorted())
@@ -79,9 +60,9 @@ export async function getTopTen(msg, groupId, metric) {
   }
 }
 
-export async function getMonthlyGains(msg, groupId, periodObject = {}) {
+export async function getMonthlyGains(msg: Message, groupId: number, periodObject = {}) {
   try {
-    const gainsPeriod = getStartToEndPeriod(periodObject);
+    const gainsPeriod: Period = getStartToEndPeriod(periodObject);
 
     const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
     const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');
@@ -103,11 +84,11 @@ export async function getMonthlyGains(msg, groupId, periodObject = {}) {
   }
 }
 
-export async function getGroupCompetitions(msg, groupId) {
+export async function getGroupCompetitions(msg: Message, groupId: number) {
   try {
     const now = new Date();
-    const ongoingComps = [];
-    const futureComps = [];
+    const ongoingComps: string[] = [];
+    const futureComps: string[] = [];
     const competitions = await womClient.groups.getGroupCompetitions(groupId);
     let message = '';
 
@@ -141,11 +122,11 @@ export async function getGroupCompetitions(msg, groupId) {
   }
 }
 
-export async function getCompCalendar(msg, groupId) {
+export async function getCompCalendar(msg: Message, groupId: number) {
   try {
     const now = new Date();
     const competitions = await womClient.groups.getGroupCompetitions(groupId);
-    const compCalendar = [];
+    const compCalendar: CompetitionCalendar[] = [];
     let message = '';
 
     competitions.forEach((comp) => {
@@ -186,7 +167,7 @@ export async function getCompCalendar(msg, groupId) {
   }
 }
 
-export async function getPlayerStats(msg, playerName) {
+export async function getPlayerStats(msg: Message, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
 
@@ -199,7 +180,7 @@ export async function getPlayerStats(msg, playerName) {
           .toString()
           .padStart(4)} ${numberWithCommas(skill.experience).padStart(12)} Exp   Rank ${numberWithCommas(
           skill.rank
-        ).padStart(11)}   ${skill.ehp.toFixed(2).padStart(8)} EHP\n`;
+        ).padStart(11)}   ${skill.ehp?.toFixed(2).padStart(8)} EHP\n`;
       });
 
       output += '```';
@@ -211,7 +192,7 @@ export async function getPlayerStats(msg, playerName) {
   }
 }
 
-export async function getPlayerBossStats(msg, playerName) {
+export async function getPlayerBossStats(msg: Message, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
     let output = `Here are the boss stats for ${displayName}:\n\`\`\``;
@@ -221,7 +202,7 @@ export async function getPlayerBossStats(msg, playerName) {
       array.forEach((boss) => {
         output += `${(Bosses[boss.metric] + ': ').padEnd(23)}${boss.kills
           .toString()
-          .padStart(6)}  Rank ${numberWithCommas(boss.rank).padStart(11)}   ${boss.ehb.toFixed(2).padStart(8)} EHB\n`;
+          .padStart(6)}  Rank ${numberWithCommas(boss.rank).padStart(11)}   ${boss.ehb?.toFixed(2).padStart(8)} EHB\n`;
       });
     });
 
@@ -233,21 +214,21 @@ export async function getPlayerBossStats(msg, playerName) {
   }
 }
 
-export async function getPlayerSkillStat(msg, metric, playerName) {
+export async function getPlayerSkillStat(msg: Message, metric: Metric, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
 
     await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.skills);
       const skillStats = array.filter((skill) => {
-        return skill.metric === metric;
+        return skill.metric.toString() === metric;
       })[0];
 
       let message = `Here are the ${Skills[toCapitalCase(skillStats.metric)]} stats for ${displayName}:\n\`\`\`Level: ${
         skillStats.level
       }\nExp: ${numberWithCommas(skillStats.experience)} Exp\nRank: ${numberWithCommas(
         skillStats.rank
-      )}\nEHP: ${skillStats.ehp.toFixed(2)} hours\`\`\``;
+      )}\nEHP: ${skillStats.ehp?.toFixed(2)} hours\`\`\``;
 
       msg.reply(message);
     });
@@ -256,21 +237,21 @@ export async function getPlayerSkillStat(msg, metric, playerName) {
   }
 }
 
-export async function getPlayerBossStat(msg, metric, playerName) {
+export async function getPlayerBossStat(msg: Message, metric: Metric, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
 
     await womClient.players.getPlayerDetails(playerName).then((json) => {
       const array = Object.values(json.latestSnapshot.data.bosses);
       const bossStats = array.filter((boss) => {
-        return boss.metric === metric;
+        return boss.metric.toString() === metric;
       })[0];
 
       let message = `Here are the ${
         Bosses[bossStats.metric]
       } stats for ${displayName}:\n\`\`\`Kills or completions: ${numberWithCommas(
         bossStats.kills
-      )}\nRank: ${numberWithCommas(bossStats.rank)}\nEHB: ${bossStats.ehb.toFixed(2)} hours\`\`\``;
+      )}\nRank: ${numberWithCommas(bossStats.rank)}\nEHB: ${bossStats.ehb?.toFixed(2)} hours\`\`\``;
 
       msg.reply(message);
     });
@@ -279,7 +260,7 @@ export async function getPlayerBossStat(msg, metric, playerName) {
   }
 }
 
-export function getCommands(msg) {
+export function getCommands(msg: Message) {
   try {
     const message = `The Degeneration bot supports the following commands:\n\`\`\`${COMMAND_MESSAGES.join(
       ''
@@ -291,9 +272,9 @@ export function getCommands(msg) {
   }
 }
 
-export function getClanRankCalculator(msg) {
+export function getClanRankCalculator(msg: Message) {
   try {
-    const attachment = new AttachmentBuilder('public/files/Clan_Rank_Calculator_v3.2.xlsx');
+    const attachment = new AttachmentBuilder('src/public/files/Clan_Rank_Calculator_v3.2.xlsx');
 
     msg.reply({
       content: 'Here is the Clan Rank Calculator:',
@@ -304,15 +285,15 @@ export function getClanRankCalculator(msg) {
   }
 }
 
-export async function getColResMap(metric, usernames, bossName = '') {
+export async function getColResMap(metric, usernames: string[] = [], bossName = '') {
   const batchSize = 70; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
   let curReq = 0;
 
   // Collect failed fetch usernames
-  const failedUsers = [];
+  const failedUsers: string[] = [];
 
-  const promises = [];
-  const resMap = [];
+  const promises: Object[] = [];
+  const resMap: Object[] = [];
   while (curReq < usernames.length) {
     const end = usernames.length < curReq + batchSize ? usernames.length : curReq + batchSize;
     const concurrentReq = new Array(batchSize);
@@ -345,9 +326,9 @@ export async function getColResMap(metric, usernames, bossName = '') {
   return resMap;
 }
 
-const waitForMs = (ms) => new Promise((resolve, reject) => setTimeout(() => resolve(), ms));
+const waitForMs = (ms: number) => new Promise<void>((resolve, reject) => setTimeout(() => resolve(), ms));
 
-async function colLogObjectBuilder(metric, usernames, index, res, bossName) {
+async function colLogObjectBuilder(metric: Metric, usernames: string[], index: number, res, bossName: string) {
   try {
     if (metric === 'log') {
       return {
@@ -366,26 +347,19 @@ async function colLogObjectBuilder(metric, usernames, index, res, bossName) {
         }).length
       };
     }
-    if (metric === 'boss') {
-      return {
-        username: usernames[index],
-        data: res.data.collectionLog.tabs.Bosses[bossName].items,
-        kc: res.data.collectionLog.tabs.Bosses[bossName].killCount[0].amount
-      };
-    }
   } catch (e) {
     console.log(`${usernames[index]} is missing data, skipping...`);
   }
 }
 
-export async function getResults(msg, id, type) {
+export async function getResults(msg: Message, compId: number, type: Type) {
   try {
     let winner;
     let secondPlace;
 
     return await womClient.competitions
-      .getCompetitionDetails(id)
-      .then((json) => {
+      .getCompetitionDetails(compId)
+      .then((json: CompetitionDetails) => {
         const output = top5members(json);
         winner = output[0].player.displayName;
         secondPlace = output[1].player.displayName;
@@ -405,59 +379,12 @@ export async function getResults(msg, id, type) {
   }
 }
 
-export async function getBossSnapshotCsv(msg, groupId, boss) {
-  try {
-    const displayNames = await getAllDisplayNames(groupId);
-    await msg.reply(
-      `Please wait while I create a snapshot for "${boss}". (approx. ${((displayNames.length / 30 + 1) * 5).toFixed(
-        0
-      )} secs.)`
-    );
-    const resArray = await getColResMap('boss', displayNames, boss);
-    const arrayOfObjects = await Promise.all(resArray);
-    const sortedResArray = arrayOfObjects;
-    await Promise.all(sortedResArray);
-    console.log('\nBatch process finished.');
-
-    const csv = `username,killcount,${sortedResArray
-      .find((user) => !!user)
-      .data.map((data) => data.name)
-      .join(',')}\n${sortedResArray
-      .map((user) => {
-        if (!user) {
-          return;
-        }
-        return `${user.username},${user.kc},${user.data.map((data) => data.quantity).join(',')}\n`;
-      })
-      .join('')}`;
-
-    const fileName = `${boss}_${DateTime.now()}.tsx`;
-
-    writeFile(`public/output/${fileName}`, csv, { flag: 'wx' }, function (err) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      console.log('Snapshot created.');
-    });
-
-    const attachment = new AttachmentBuilder(`public/output/${fileName}`);
-    await msg.reply({
-      content: 'Here is a csv of the created snapshot:',
-      files: [attachment]
-    });
-  } catch (e) {
-    allCatcher(e, msg);
-    console.log(e);
-  }
-}
-
-export async function getBalance(msg, username) {
+export async function getBalance(msg: Message, username: string) {
   try {
     const points = await getPointsByUsername(username);
     let message = '';
     if (points !== undefined) {
-      message = `The current balance for ${username} is: ${points} Regencoin${points === 1 ? '' : 's'}`;
+      message = `The current balance for ${username} is: ${points} Regencoin${parseInt(points) === 1 ? '' : 's'}`;
     } else {
       message = `No balance was found for ${username}. If you are sure you spelled the username correctly, please contact Belgiska. Alternatively, try the command again (sometimes it noodles out).`;
     }
@@ -466,4 +393,34 @@ export async function getBalance(msg, username) {
     allCatcher(e, msg);
     console.log(e);
   }
+}
+
+export async function getPetsOrLogTopTen(msg: Message, groupId: number, metric) {
+  const usernames = await getAllDisplayNames(groupId);
+
+  msg.reply(
+    `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(
+      ((usernames?.length || 30) / 30 + 1) *
+      5
+    ).toFixed(0)} secs.)`
+  );
+
+  const resArray = await getColResMap(metric, usernames);
+
+  if (metric === 'pets') {
+    const arrayOfObjects = (await Promise.all(resArray)) as { pets: number }[];
+    const sortedResArray = arrayOfObjects.sort((a: { pets: number }, b: { pets: number }) => b.pets - a.pets);
+
+    await Promise.all(sortedResArray);
+
+    msg.reply(buildMessage(sortedResArray, metric));
+  } else {
+    const arrayOfObjects = (await Promise.all(resArray)) as { uniqueObtained: number }[];
+    const sortedResArray = arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
+
+    await Promise.all(sortedResArray);
+
+    msg.reply(buildMessage(sortedResArray, metric));
+  }
+  console.log('\nBatch process finished.');
 }

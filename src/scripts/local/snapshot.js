@@ -2,8 +2,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { WOMClient } from '@wise-old-man/utils';
 import { DateTime } from 'luxon';
-import { getColResMap } from '../wom.js';
+import { getColResMap } from '../wom';
 import { writeFile } from 'fs';
+
+/**
+ * @deprecated
+ * This file is deprecated, as the Collection Log plugin/api is too unreliable to use in competitions
+ */
 
 const metric = 'boss';
 const boss = 'Zulrah';
@@ -40,7 +45,7 @@ try {
 
   const fileName = `${boss}_${DateTime.now()}.txt`;
 
-  writeFile(`public/output/${fileName}`, csv, { flag: 'wx' }, function (err) {
+  writeFile(`src/public/output/${fileName}`, csv, { flag: 'wx' }, function (err) {
     if (err) {
       console.log(err);
       return;

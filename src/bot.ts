@@ -1,9 +1,8 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
 import { Client, GatewayIntentBits } from 'discord.js';
 import {
   getBalance,
-  getBossSnapshotCsv,
   getClanRankCalculator,
   getCommands,
   getCompCalendar,
@@ -14,7 +13,7 @@ import {
   getResults,
   getTopTen
 } from './scripts/wom.js';
-import http from 'http';
+import * as http from 'http';
 import { ACTIVITIES } from './constants/messages.js';
 import { getDiceRoll } from './scripts/bingo.js';
 
@@ -25,7 +24,7 @@ http
   })
   .listen(8000);
 
-const groupId = process.env.GROUP_ID;
+const GROUP_ID = process.env.GROUP_ID;
 
 const client = new Client({
   intents: [
@@ -37,16 +36,17 @@ const client = new Client({
 });
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  console.log(`Logged in as ${client.user?.tag}!`);
   let activities = ACTIVITIES,
     i = 0;
-  setInterval(() => client.user.setActivity(`${activities[i++ % activities.length]}`), 10000 * 60 * 5);
+  setInterval(() => client.user?.setActivity(`${activities[i++ % activities.length]}`), 10000 * 60 * 5);
 });
 
 client.on('messageCreate', (msg) => {
   if (msg.author.bot) return;
+  const groupId: number = GROUP_ID as unknown as number;
   const args = msg.content.trim().split(/ +/g);
-  const command = args.shift().toLowerCase();
+  const command = args.shift()?.toLowerCase();
   let playerName;
   let skill;
   let boss;
@@ -60,10 +60,10 @@ client.on('messageCreate', (msg) => {
       getClanRankCalculator(msg);
       break;
     case '?sotw':
-      getResults(msg, args[0], 'sotw');
+      getResults(msg, parseInt(args[0]), 'sotw');
       break;
     case '?botw':
-      getResults(msg, args[0], 'botw');
+      getResults(msg, parseInt(args[0]), 'botw');
       break;
     case '?comps':
       getGroupCompetitions(msg, groupId);
@@ -89,8 +89,8 @@ client.on('messageCreate', (msg) => {
     case '?month':
       const monthArg = args.shift();
       const yearArg = args.shift();
-      const month = !isNaN(parseInt(monthArg)) ? parseInt(monthArg) : undefined;
-      const year = !isNaN(parseInt(yearArg)) ? parseInt(yearArg) : undefined;
+      const month = monthArg && !isNaN(parseInt(monthArg)) ? parseInt(monthArg) : undefined;
+      const year = yearArg && !isNaN(parseInt(yearArg)) ? parseInt(yearArg) : undefined;
       getMonthlyGains(msg, groupId, { month: month, year: year });
       break;
     // Not necessary, old school bot already has a similar, better feature
@@ -104,12 +104,12 @@ client.on('messageCreate', (msg) => {
     //     getPlayerBossStats(msg, playerName);
     //     break;
     case '?lvl':
-      skill = args.shift().toLowerCase();
+      skill = args.shift()?.toLowerCase();
       playerName = args.join(' ').toString();
       getPlayerSkillStat(msg, skill, playerName);
       break;
     case '?kc':
-      boss = args.shift().toLowerCase();
+      boss = args.shift()?.toLowerCase();
       playerName = args.join(' ').toString();
       getPlayerBossStat(msg, boss, playerName);
       break;
@@ -123,10 +123,6 @@ client.on('messageCreate', (msg) => {
       playerName = args.join(' ').toString();
       getBalance(msg, playerName);
       break;
-    // case "?snapshot":
-    //     boss = args.shift().toLowerCase();
-    //     getBossSnapshotCsv(msg, groupId, boss);
-    //     break;
     case '?roll':
       getDiceRoll(msg);
     default:

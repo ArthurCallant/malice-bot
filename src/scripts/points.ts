@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
-import fs from 'fs/promises';
-import path from 'path';
-import process from 'process';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
 import { google } from 'googleapis';
 
@@ -26,7 +26,7 @@ const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
  */
 async function loadSavedCredentialsIfExist() {
   try {
-    const content = await fs.readFile(TOKEN_PATH);
+    const content: any = await fs.readFile(TOKEN_PATH);
     const credentials = JSON.parse(content);
     return google.auth.fromJSON(credentials);
   } catch (err) {
@@ -41,7 +41,7 @@ async function loadSavedCredentialsIfExist() {
  * @return {Promise<void>}
  */
 async function saveCredentials(client) {
-  const content = await fs.readFile(CREDENTIALS_PATH);
+  const content: any = await fs.readFile(CREDENTIALS_PATH);
   const keys = JSON.parse(content);
   const key = keys.installed || keys.web;
   const payload = JSON.stringify({
@@ -57,7 +57,7 @@ async function saveCredentials(client) {
  * Load or request or authorization to call APIs.
  */
 async function authorize() {
-  let client = await loadSavedCredentialsIfExist();
+  let client: any = await loadSavedCredentialsIfExist();
   if (client) {
     return client;
   }
@@ -89,20 +89,19 @@ async function listUsersPoints(auth) {
     })
     .join('\n');
 
-  await fs.writeFile('public/output/regen-points.txt', output, (err) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
+  try {
+    await fs.writeFile('src/public/output/regen-points.txt', output);
     console.log('The points file has been updated.');
-  });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 export async function getPointsByUsername(username) {
   // First make sure the local coins file is up to date with the spreadsheet (SSOT)
   updatePointsFile();
 
-  const file = await fs.readFile('public/output/regen-points.txt', 'utf-8');
+  const file = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
   const lines = file.split('\n');
 
   let pointValue;
@@ -130,7 +129,7 @@ export async function updatePointsFile() {
 export async function getAllPointsSorted() {
   updatePointsFile();
 
-  const file = await fs.readFile('public/output/regen-points.txt', 'utf-8');
+  const file = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
   const lines = file.split('\n');
 
   return lines
@@ -138,7 +137,7 @@ export async function getAllPointsSorted() {
       const [_userA, pointsA] = lineA.split(',');
       const [_userB, pointsB] = lineB.split(',');
 
-      return pointsB - pointsA;
+      return (pointsB as unknown as number) - (pointsA as unknown as number);
     })
     .map((line) => {
       const [username, points] = line.split(',');
@@ -152,52 +151,52 @@ export async function getAllPointsSorted() {
 //
 //
 //
-async function pushCsvToSheet(csv) {
-  // TODO
-  const request = {
-    spreadsheetId: spreadsheetId,
-    resource: {
-      valueInputOption: '',
-      data: csv
-    }
-  };
-  try {
-    const response = (await sheets.spreadsheets.values.batchUpdate(request)).data;
-    console.log(JSON.stringify(response, null, 2));
-  } catch (err) {
-    console.error(err);
-  }
-}
+// async function pushCsvToSheet(csv) {
+//   // TODO
+//   const request = {
+//     spreadsheetId: spreadsheetId,
+//     resource: {
+//       valueInputOption: '',
+//       data: csv
+//     }
+//   };
+//   try {
+//     const response = (await sheets.spreadsheets.values.batchUpdate(request)).data;
+//     console.log(JSON.stringify(response, null, 2));
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
 
-async function addPointsToUser(username, points) {
-  const res = await fs.readFile('public/output/regen-points.txt', 'utf-8');
-  return res
-    .split('\n')
-    .map((u) => {
-      const user = u.split(',')[0];
-      let pointTally = parseInt(u.split(',')[1]);
-      if (user.toLowerCase() === username.toLowerCase()) {
-        pointTally = pointTally + points;
-      }
-      return `${user},${pointTally}`;
-    })
-    .join('\n');
-}
+// async function addPointsToUser(username, points) {
+//   const res = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
+//   return res
+//     .split('\n')
+//     .map((u) => {
+//       const user = u.split(',')[0];
+//       let pointTally = parseInt(u.split(',')[1]);
+//       if (user.toLowerCase() === username.toLowerCase()) {
+//         pointTally = pointTally + points;
+//       }
+//       return `${user},${pointTally}`;
+//     })
+//     .join('\n');
+// }
 
-async function saveToFile(content, path) {
-  fs.writeFile(path, content, (err) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    console.log('The points file has been updated.');
-  });
-}
+// async function saveToFile(content, path) {
+//   fs.writeFile(path, content, (err) => {
+//     if (err) {
+//       console.log(err);
+//       return;
+//     }
+//     console.log('The points file has been updated.');
+//   });
+// }
 
-function convertLsvToCsv(content) {
-  return content.split('\n').join(',');
-}
+// function convertLsvToCsv(content) {
+//   return content.split('\n').join(',');
+// }
 // const outputing = await addPointsToUser("Belgiska", 23);
-// saveToFile(outputing, "public/output/regen-points.txt");
+// saveToFile(outputing, "src/public/output/regen-points.txt");
 
 // authorize().then(listUsersPoints).catch(console.error);

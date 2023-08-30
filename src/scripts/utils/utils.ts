@@ -1,16 +1,20 @@
-import { BLACKLIST } from '../../constants/blacklist.js';
+import { BLACKLIST } from '../../constants/blacklist';
 import { writeFile } from 'fs';
 import { DateTime } from 'luxon';
+import { MessageBuilderOptions, Period, Type } from '../../constants/application.types';
+import { CompetitionDetails, WOMClient } from '@wise-old-man/utils';
 
-export function numberWithCommas(x) {
+export function numberWithCommas(x: number) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-export function top5members(json) {
-  return [...json['participations']].sort((playerA, playerB) => playerA['progress'] > playerB['progress']).slice(0, 5);
+export function top5members(json: CompetitionDetails) {
+  return [...json['participations']]
+    .sort((playerA, playerB) => parseInt(playerA['progress'].toString()) - parseInt(playerB['progress'].toString()))
+    .slice(0, 5);
 }
 
-export function jsonToOutput(json, type) {
+export function jsonToOutput(json: Object[], type: Type) {
   let suffix = type === 'sotw' ? 'exp' : 'kills';
   return json.map((p, i) => {
     return `RANK ${i + 1}: ${p['player']['displayName']} with ${numberWithCommas(p['progress']['gained'])} ${suffix}`;
@@ -42,7 +46,7 @@ export function formatDisplayNameForTopTen(position, username) {
   return `${((position + 1).toString() + '.').padEnd(3)} ${username.padEnd(12)}`;
 }
 
-export function buildMessage(sortedMemberships, metric, options = {}) {
+export function buildMessage(sortedMemberships, metric, options: MessageBuilderOptions = {}) {
   let message = 'The following players are the members of Regeneration that ';
   switch (metric) {
     case 'ttm':
@@ -95,42 +99,55 @@ export function buildMessage(sortedMemberships, metric, options = {}) {
       message += `have the highest amount of unique pets:\n\`\`\`${sortedMemberships
         .slice(0, 10)
         .map((user, index) => {
-          return `${formatDisplayNameForTopTen(index, user.username)}: ${(user.pets.toFixed(2) + ' pets.').padStart(
-            8
-          )}`;
+          return `${formatDisplayNameForTopTen(index, user.username)}: ${(
+            Math.trunc(user.pets).toFixed(2) + ' pets.'
+          ).padStart(8)}`;
         })
         .join('\n')}\`\`\``;
       break;
     case 'balance':
       message += `have the highest amount of Regencoins:\n\`\`\`${sortedMemberships
         .map((user, index) => {
-          return `${formatDisplayNameForTopTen(index, user.username)}: ${(user.points + ' Regencoins.').padStart(10)}`;
+          return `${formatDisplayNameForTopTen(index, user.username)}: ${(
+            Math.trunc(user.points) + ' Regencoins.'
+          ).padStart(10)}`;
         })
         .join('\n')}\`\`\``;
       break;
     case 'month':
       message = `Here is the monthly leaderboard results for ${options.sdString} - ${options.edString}:\n
-      Overall EXP:\n\`\`\`${options.expStats
-        .filter((user) => !BLACKLIST.includes(user.username))
-        .slice(0, 10)
-        .map((m, i) => {
-          return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(18)}`;
-        })
-        .join('\n')}\`\`\`
-      EHB:\n\`\`\`${options.ehbStats
-        .filter((user) => !BLACKLIST.includes(user.username))
-        .slice(0, 10)
-        .map((m, i) => {
-          return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
-        })
-        .join('\n')}\`\`\`
-      EHP:\n\`\`\`${options.ehpStats
-        .filter((user) => !BLACKLIST.includes(user.username))
-        .slice(0, 10)
-        .map((m, i) => {
-          return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
-        })
-        .join('\n')}\`\`\`
+      Overall EXP:\n\`\`\`${
+        options.expStats &&
+        options.expStats
+          .filter((user) => !BLACKLIST.includes(user.username))
+          .slice(0, 10)
+          .map((m, i) => {
+            return `${formatDisplayNameForTopTen(i, m.username)}: ${(numberWithCommas(m.gained) + ' Exp.').padStart(
+              18
+            )}`;
+          })
+          .join('\n')
+      }\`\`\`
+      EHB:\n\`\`\`${
+        options.ehbStats &&
+        options.ehbStats
+          .filter((user) => !BLACKLIST.includes(user.username))
+          .slice(0, 10)
+          .map((m, i) => {
+            return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHB.').padStart(15)}`;
+          })
+          .join('\n')
+      }\`\`\`
+      EHP:\n\`\`\`${
+        options.ehpStats &&
+        options.ehpStats
+          .filter((user) => !BLACKLIST.includes(user.username))
+          .slice(0, 10)
+          .map((m, i) => {
+            return `${formatDisplayNameForTopTen(i, m.username)}: ${(m.gained.toFixed(2) + ' EHP.').padStart(15)}`;
+          })
+          .join('\n')
+      }\`\`\`
       `;
     default:
       break;
@@ -138,9 +155,9 @@ export function buildMessage(sortedMemberships, metric, options = {}) {
   return message;
 }
 
-export function logUsernames(usernames) {
+export function logUsernames(usernames: string[]) {
   const output = usernames.join('\n');
-  writeFile('public/logs/usernames_log.txt', output, (err) => {
+  writeFile('src/public/logs/usernames_log.txt', output, (err) => {
     if (err) {
       console.log(err);
       return;
@@ -164,7 +181,7 @@ export function getStartToEndPeriod({
   day = 1,
   month = getCurrentDateObject().month,
   year = getCurrentDateObject().year
-}) {
+}): Period {
   const startDate = DateTime.fromObject({ day: day, month: month, year: year });
   const endDate = startDate.endOf('month');
 
@@ -174,7 +191,12 @@ export function getStartToEndPeriod({
   };
 }
 
-export async function fetchGroupGains(womClient, groupId, gainsPeriod, metric) {
+export async function fetchGroupGains(
+  womClient: WOMClient,
+  groupId: number,
+  gainsPeriod: Period,
+  metric: 'ehb' | 'ehp' | 'overall'
+) {
   return await womClient.groups
     .getGroupGains(
       groupId,

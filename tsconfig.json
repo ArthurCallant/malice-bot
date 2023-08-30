@@ -1,0 +1,26 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "lib": ["es2017", "dom"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "outDir": "out",
+    "skipDefaultLibCheck": false,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "es2020",
+    "paths": {
+      "bot": ["./src/bot.ts"],
+      "local": ["./src/local.ts"]
+    }
+  },
+  "exclude": ["node_modules"]
+}
