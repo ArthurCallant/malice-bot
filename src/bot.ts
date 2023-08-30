@@ -1,21 +1,11 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { Client, GatewayIntentBits } from 'discord.js';
-import {
-  getBalance,
-  getClanRankCalculator,
-  getCommands,
-  getCompCalendar,
-  getGroupCompetitions,
-  getMonthlyGains,
-  getPlayerBossStat,
-  getPlayerSkillStat,
-  getResults,
-  getTopTen
-} from './scripts/wom.js';
+import { Client, GatewayIntentBits, Message, TextChannel } from 'discord.js';
 import * as http from 'http';
 import { ACTIVITIES } from './constants/messages.js';
 import { getDiceRoll } from './scripts/bingo.js';
+import { isAuthorAdmin } from './scripts/utils/roles.utils.js';
+import { adminCommands, standardUserCommands } from './scripts/commands.js';
 
 http
   .createServer(function (req, res) {
@@ -23,8 +13,6 @@ http
     res.end();
   })
   .listen(8000);
-
-const GROUP_ID = process.env.GROUP_ID;
 
 const client = new Client({
   intents: [
@@ -44,89 +32,28 @@ client.on('ready', () => {
 
 client.on('messageCreate', (msg) => {
   if (msg.author.bot) return;
-  const groupId: number = GROUP_ID as unknown as number;
+
   const args = msg.content.trim().split(/ +/g);
   const command = args.shift()?.toLowerCase();
-  let playerName;
-  let skill;
-  let boss;
-  switch (command) {
-    case '!help':
-    case '/help':
-    case '?help':
-      getCommands(msg);
-      break;
-    case '?calc':
-      getClanRankCalculator(msg);
-      break;
-    case '?sotw':
-      getResults(msg, parseInt(args[0]), 'sotw');
-      break;
-    case '?botw':
-      getResults(msg, parseInt(args[0]), 'botw');
-      break;
-    case '?comps':
-      getGroupCompetitions(msg, groupId);
-      break;
-    case '?calendar':
-      getCompCalendar(msg, groupId);
-      break;
-    case '?ttm':
-      getTopTen(msg, groupId, 'ttm');
-      break;
-    case '?exp':
-      getTopTen(msg, groupId, 'exp');
-      break;
-    case '?ehb':
-      getTopTen(msg, groupId, 'ehb');
-      break;
-    case '?ehp':
-      getTopTen(msg, groupId, 'ehp');
-      break;
-    case '?rgn':
-      getTopTen(msg, groupId, 'balance');
-      break;
-    case '?month':
-      const monthArg = args.shift();
-      const yearArg = args.shift();
-      const month = monthArg && !isNaN(parseInt(monthArg)) ? parseInt(monthArg) : undefined;
-      const year = yearArg && !isNaN(parseInt(yearArg)) ? parseInt(yearArg) : undefined;
-      getMonthlyGains(msg, groupId, { month: month, year: year });
-      break;
-    // Not necessary, old school bot already has a similar, better feature
-    // case "?stats":
-    //     playerName = args.join(" ").toString();
-    //     getPlayerStats(msg, playerName);
-    //     break;
-    // Response body is too big, can't split it up, so unusable
-    // case "?bosses":
-    //     playerName = args.join(" ").toString();
-    //     getPlayerBossStats(msg, playerName);
-    //     break;
-    case '?lvl':
-      skill = args.shift()?.toLowerCase();
-      playerName = args.join(' ').toString();
-      getPlayerSkillStat(msg, skill, playerName);
-      break;
-    case '?kc':
-      boss = args.shift()?.toLowerCase();
-      playerName = args.join(' ').toString();
-      getPlayerBossStat(msg, boss, playerName);
-      break;
-    case '?log':
-      getTopTen(msg, groupId, 'log');
-      break;
-    case '?pets':
-      getTopTen(msg, groupId, 'pets');
-      break;
-    case '?balance':
-      playerName = args.join(' ').toString();
-      getBalance(msg, playerName);
-      break;
-    case '?roll':
-      getDiceRoll(msg);
-    default:
-      break;
+
+  const channelId = msg.channelId;
+  const channel: TextChannel = client.channels.cache.get(channelId) as TextChannel;
+  const channelName = channel.name;
+
+  const isAdmin = isAuthorAdmin(msg);
+
+  // if (channelName === 'spoiler-free-bot-channel' && isAdmin) {
+  //   if (command !== '?roll') {
+  //     msg.reply('Sorry, you can only use the ?roll command in this channel');
+  //     return;
+  //   } else {
+  //     getDiceRoll(msg);
+  //   }
+  // }
+  if (isAdmin) {
+    adminCommands(msg, command, args);
+  } else {
+    standardUserCommands(msg, command, args);
   }
 });
 

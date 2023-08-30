@@ -26,6 +26,7 @@ import {
   UserWithLogSlots,
   UserWithPets
 } from '../constants/application.types';
+import { GROUP_ID } from '../constants/env.constants.js';
 
 const womClient = new WOMClient();
 
@@ -41,12 +42,12 @@ export async function getAllDisplayNames(groupId: number) {
   }
 }
 
-export async function getTopTen(msg: Message, groupId: number, metric: TopTenMetric) {
+export async function getTopTen(msg: Message, metric: TopTenMetric) {
   try {
     switch (metric) {
       case 'pets':
       case 'log':
-        getPetsOrLogTopTen(msg, groupId, metric);
+        getPetsOrLogTopTen(msg, metric);
         break;
       case 'balance':
         const sortedPointsArray = (await getAllPointsSorted())
@@ -55,7 +56,7 @@ export async function getTopTen(msg: Message, groupId: number, metric: TopTenMet
         msg.reply(buildMessage(sortedPointsArray, metric));
         break;
       default:
-        const memberships = (await womClient.groups.getGroupDetails(groupId)).memberships;
+        const memberships = (await womClient.groups.getGroupDetails(GROUP_ID)).memberships;
         const sortedMemberships = sortMembershipsByMetric(memberships, metric)
           .filter((user) => !BLACKLIST.includes(user.player.displayName))
           .slice(0, 10);
@@ -67,16 +68,16 @@ export async function getTopTen(msg: Message, groupId: number, metric: TopTenMet
   }
 }
 
-export async function getMonthlyGains(msg: Message, groupId: number, periodObject = {}) {
+export async function getMonthlyGains(msg: Message, periodObject = {}) {
   try {
     const gainsPeriod: Period = getStartToEndPeriod(periodObject);
 
     const sdString = DateTime.fromISO(gainsPeriod.startDate).toFormat('d LLLL yyyy');
     const edString = DateTime.fromISO(gainsPeriod.endDate).toFormat('d LLLL yyyy');
 
-    const ehbStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'ehb');
-    const ehpStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'ehp');
-    const expStats = await fetchGroupGains(womClient, groupId, gainsPeriod, 'overall');
+    const ehbStats = await fetchGroupGains(womClient, GROUP_ID, gainsPeriod, 'ehb');
+    const ehpStats = await fetchGroupGains(womClient, GROUP_ID, gainsPeriod, 'ehp');
+    const expStats = await fetchGroupGains(womClient, GROUP_ID, gainsPeriod, 'overall');
 
     const message = buildMessage([], 'month', {
       sdString: sdString,
@@ -91,12 +92,12 @@ export async function getMonthlyGains(msg: Message, groupId: number, periodObjec
   }
 }
 
-export async function getGroupCompetitions(msg: Message, groupId: number) {
+export async function getGroupCompetitions(msg: Message) {
   try {
     const now = new Date();
     const ongoingComps: string[] = [];
     const futureComps: string[] = [];
-    const competitions = await womClient.groups.getGroupCompetitions(groupId);
+    const competitions = await womClient.groups.getGroupCompetitions(GROUP_ID);
     let message = '';
 
     competitions.forEach((comp) => {
@@ -129,10 +130,10 @@ export async function getGroupCompetitions(msg: Message, groupId: number) {
   }
 }
 
-export async function getCompCalendar(msg: Message, groupId: number) {
+export async function getCompCalendar(msg: Message) {
   try {
     const now = new Date();
-    const competitions = await womClient.groups.getGroupCompetitions(groupId);
+    const competitions = await womClient.groups.getGroupCompetitions(GROUP_ID);
     const compCalendar: CompetitionCalendar[] = [];
     let message = '';
 
@@ -402,8 +403,8 @@ export async function getBalance(msg: Message, username: string) {
   }
 }
 
-export async function getPetsOrLogTopTen(msg: Message, groupId: number, metric) {
-  const usernames = await getAllDisplayNames(groupId);
+export async function getPetsOrLogTopTen(msg: Message, metric) {
+  const usernames = await getAllDisplayNames(GROUP_ID);
 
   msg.reply(
     `Please wait while I fetch the top 10 for the metric "${metric}". (approx. ${(

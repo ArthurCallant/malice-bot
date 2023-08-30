@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Client, Message, TextChannel } from 'discord.js';
 import { allCatcher } from './errors/handling';
 import { rollDice } from './utils/utils';
 
@@ -12,4 +12,11 @@ export function getDiceRoll(msg: Message) {
   } catch (e) {
     allCatcher(e, msg);
   }
+}
+
+export function testChannel(msg: Message, client: Client) {
+  const channelId = msg.channelId;
+  const channel: TextChannel = client.channels.cache.get(channelId) as TextChannel;
+  const channelName = channel.name;
+  msg.reply(`${channelName}`);
 }
