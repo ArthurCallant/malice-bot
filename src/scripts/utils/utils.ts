@@ -1,8 +1,14 @@
 import { BLACKLIST } from '../../constants/blacklist';
 import { writeFile } from 'fs';
 import { DateTime } from 'luxon';
-import { MessageBuilderOptions, Period, Type } from '../../constants/application.types';
-import { CompetitionDetails, WOMClient } from '@wise-old-man/utils';
+import {
+  BuildMessageUserArray,
+  MessageBuilderOptions,
+  Period,
+  TopTenMetric,
+  Type
+} from '../../constants/application.types';
+import { CompetitionDetails, MembershipWithPlayer, WOMClient } from '@wise-old-man/utils';
 
 export function numberWithCommas(x: number) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -21,7 +27,7 @@ export function jsonToOutput(json: Object[], type: Type) {
   });
 }
 
-export function toCapitalCase(string) {
+export function toCapitalCase(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -29,7 +35,7 @@ export function rollDice() {
   return Math.floor(Math.random() * 7);
 }
 
-export function sortMembershipsByMetric(memberships, metric) {
+export function sortMembershipsByMetric(memberships: MembershipWithPlayer[], metric: TopTenMetric) {
   switch (metric) {
     case 'ttm':
       return memberships.sort((a, b) => a.player.ttm - b.player.ttm).filter((a) => a.player.ttm !== 0);
@@ -42,16 +48,20 @@ export function sortMembershipsByMetric(memberships, metric) {
   }
 }
 
-export function formatDisplayNameForTopTen(position, username) {
+export function formatDisplayNameForTopTen(position: number, username: string) {
   return `${((position + 1).toString() + '.').padEnd(3)} ${username.padEnd(12)}`;
 }
 
-export function buildMessage(sortedMemberships, metric, options: MessageBuilderOptions = {}) {
+export function buildMessage(
+  sortedMemberships: BuildMessageUserArray,
+  metric: TopTenMetric,
+  options: MessageBuilderOptions = {}
+) {
   let message = 'The following players are the members of Regeneration that ';
   switch (metric) {
     case 'ttm':
       message += `are closest to maxing:\n\`\`\`${sortedMemberships
-        .map((m, i) => {
+        .map((m, i: number) => {
           return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
             m.player.ttm.toFixed(2) + ' hours left.'
           ).padStart(18)}`;
@@ -60,7 +70,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
       break;
     case 'exp':
       message += `have the highest amount of Exp:\n\`\`\`${sortedMemberships
-        .map((m, i) => {
+        .map((m, i: number) => {
           return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
             numberWithCommas(m.player.exp) + ' Exp.'
           ).padStart(18)}`;
@@ -69,7 +79,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
       break;
     case 'ehb':
       message += `have the highest amount of Efficient Hours Bossed:\n\`\`\`${sortedMemberships
-        .map((m, i) => {
+        .map((m, i: number) => {
           return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
             m.player.ehb.toFixed(2) + ' EHB.'
           ).padStart(15)}`;
@@ -78,7 +88,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
       break;
     case 'ehp':
       message += `have the highest amount of Efficient Hours Played:\n\`\`\`${sortedMemberships
-        .map((m, i) => {
+        .map((m, i: number) => {
           return `${formatDisplayNameForTopTen(i, m.player.displayName)}: ${(
             m.player.ehp.toFixed(2) + ' EHP.'
           ).padStart(15)}`;
@@ -88,7 +98,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
     case 'log':
       message += `have the highest amount of unique Collection Log slots:\n\`\`\`${sortedMemberships
         .slice(0, 10)
-        .map((user, index) => {
+        .map((user, index: number) => {
           return `${formatDisplayNameForTopTen(index, user.username)}: ${(
             user.uniqueObtained + '  collection log slots.'
           ).padStart(18)}`;
@@ -98,7 +108,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
     case 'pets':
       message += `have the highest amount of unique pets:\n\`\`\`${sortedMemberships
         .slice(0, 10)
-        .map((user, index) => {
+        .map((user, index: number) => {
           return `${formatDisplayNameForTopTen(index, user.username)}: ${(
             Math.trunc(user.pets).toFixed(2) + ' pets.'
           ).padStart(8)}`;
@@ -107,7 +117,7 @@ export function buildMessage(sortedMemberships, metric, options: MessageBuilderO
       break;
     case 'balance':
       message += `have the highest amount of Regencoins:\n\`\`\`${sortedMemberships
-        .map((user, index) => {
+        .map((user, index: number) => {
           return `${formatDisplayNameForTopTen(index, user.username)}: ${(
             Math.trunc(user.points) + ' Regencoins.'
           ).padStart(10)}`;

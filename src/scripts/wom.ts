@@ -18,7 +18,14 @@ import { AttachmentBuilder, Message } from 'discord.js';
 import { COMMAND_MESSAGES } from '../constants/messages.js';
 import { DateTime } from 'luxon';
 import { BLACKLIST } from '../constants/blacklist';
-import { CompetitionCalendar, Metric, Period, Type } from '../constants/application.types';
+import {
+  CompetitionCalendar,
+  Period,
+  TopTenMetric,
+  Type,
+  UserWithLogSlots,
+  UserWithPets
+} from '../constants/application.types';
 
 const womClient = new WOMClient();
 
@@ -34,7 +41,7 @@ export async function getAllDisplayNames(groupId: number) {
   }
 }
 
-export async function getTopTen(msg: Message, groupId: number, metric: Metric) {
+export async function getTopTen(msg: Message, groupId: number, metric: TopTenMetric) {
   try {
     switch (metric) {
       case 'pets':
@@ -214,7 +221,7 @@ export async function getPlayerBossStats(msg: Message, playerName: string) {
   }
 }
 
-export async function getPlayerSkillStat(msg: Message, metric: Metric, playerName: string) {
+export async function getPlayerSkillStat(msg: Message, metric: string, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
 
@@ -237,7 +244,7 @@ export async function getPlayerSkillStat(msg: Message, metric: Metric, playerNam
   }
 }
 
-export async function getPlayerBossStat(msg: Message, metric: Metric, playerName: string) {
+export async function getPlayerBossStat(msg: Message, metric: string, playerName: string) {
   try {
     const displayName = (await womClient.players.getPlayerDetails(playerName)).displayName;
 
@@ -285,7 +292,7 @@ export function getClanRankCalculator(msg: Message) {
   }
 }
 
-export async function getColResMap(metric, usernames: string[] = [], bossName = '') {
+export async function getColResMap(metric: 'pets' | 'log', usernames: string[] = [], bossName = '') {
   const batchSize = 70; // tweak this number if api fails (set it lower and wait a couple of mins before trying again)
   let curReq = 0;
 
@@ -328,7 +335,7 @@ export async function getColResMap(metric, usernames: string[] = [], bossName = 
 
 const waitForMs = (ms: number) => new Promise<void>((resolve, reject) => setTimeout(() => resolve(), ms));
 
-async function colLogObjectBuilder(metric: Metric, usernames: string[], index: number, res, bossName: string) {
+async function colLogObjectBuilder(metric: 'pets' | 'log', usernames: string[], index: number, res, bossName: string) {
   try {
     if (metric === 'log') {
       return {
@@ -408,14 +415,14 @@ export async function getPetsOrLogTopTen(msg: Message, groupId: number, metric) 
   const resArray = await getColResMap(metric, usernames);
 
   if (metric === 'pets') {
-    const arrayOfObjects = (await Promise.all(resArray)) as { pets: number }[];
+    const arrayOfObjects = (await Promise.all(resArray)) as UserWithPets[];
     const sortedResArray = arrayOfObjects.sort((a: { pets: number }, b: { pets: number }) => b.pets - a.pets);
 
     await Promise.all(sortedResArray);
 
     msg.reply(buildMessage(sortedResArray, metric));
   } else {
-    const arrayOfObjects = (await Promise.all(resArray)) as { uniqueObtained: number }[];
+    const arrayOfObjects = (await Promise.all(resArray)) as UserWithLogSlots[];
     const sortedResArray = arrayOfObjects.sort((a, b) => b.uniqueObtained - a.uniqueObtained);
 
     await Promise.all(sortedResArray);
