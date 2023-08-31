@@ -15,6 +15,10 @@ import { getDiceRoll } from './bingo';
 
 export function adminCommands(msg: Message, command: string, args: string[]) {
   switch (command) {
+    case '!help':
+    case '/help':
+    case '?help':
+      getCommands(msg, true);
     case '?sotw':
       getResults(msg, parseInt(args[0]), 'sotw');
       break;
@@ -63,7 +67,6 @@ export function standardUserCommands(msg: Message, command: string, args: string
     case '!help':
     case '/help':
     case '?help':
-      // TODO explain changes to permissions, and that certain users can't use certain commands anymore
       getCommands(msg);
       break;
     case '?calc':

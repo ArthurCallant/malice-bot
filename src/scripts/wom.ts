@@ -15,7 +15,7 @@ import {
 } from './utils/utils';
 import { getAllPointsSorted, getPointsByUsername } from './points';
 import { AttachmentBuilder, Message } from 'discord.js';
-import { COMMAND_MESSAGES } from '../constants/messages.js';
+import { ADMIN_COMMAND_MESSAGES, COMMAND_MESSAGES } from '../constants/messages';
 import { DateTime } from 'luxon';
 import { BLACKLIST } from '../constants/blacklist';
 import {
@@ -26,7 +26,7 @@ import {
   UserWithLogSlots,
   UserWithPets
 } from '../constants/application.types';
-import { GROUP_ID } from '../constants/env.constants.js';
+import { GROUP_ID } from '../constants/env.constants';
 
 const womClient = new WOMClient();
 
@@ -268,9 +268,13 @@ export async function getPlayerBossStat(msg: Message, metric: string, playerName
   }
 }
 
-export function getCommands(msg: Message) {
+export function getCommands(msg: Message, isAdmin: boolean = false) {
   try {
-    const message = `The Degeneration bot supports the following commands:\n\`\`\`${COMMAND_MESSAGES.join(
+    let message: string = 'The Degeneration bot supports the following commands:\n';
+    if (isAdmin) {
+      message += `For Admins:\n\`\`\`${ADMIN_COMMAND_MESSAGES.join('')}\`\`\``;
+    }
+    message += `For Regular members:\n\`\`\`${COMMAND_MESSAGES.join(
       ''
     )}\nThe boss_identifier is typically the name of the boss in lowercase, separated by underscores, e.g. thermonuclear_smoke_devil or chambers_of_xeric. We are working on allowing certain common abbreviations as well (e.g. cox or tob or thermy, etc...).\`\`\``;
 

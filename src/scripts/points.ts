@@ -7,6 +7,7 @@ import { authenticate } from '@google-cloud/local-auth';
 import { google } from 'googleapis';
 
 const spreadsheetId = process.env.POINTS_SPREADSHEET_ID;
+const publicPath = process.env.PUBLIC_PATH;
 
 // TODO: WIP!! Right now can only get balance by username
 // Future release will include option to update balance
@@ -90,7 +91,7 @@ async function listUsersPoints(auth) {
     .join('\n');
 
   try {
-    await fs.writeFile('src/public/output/regen-points.txt', output);
+    await fs.writeFile(`${publicPath}/output/regen-points.txt`, output);
     console.log('The points file has been updated.');
   } catch (e) {
     console.log(e);
@@ -101,7 +102,7 @@ export async function getPointsByUsername(username) {
   // First make sure the local coins file is up to date with the spreadsheet (SSOT)
   updatePointsFile();
 
-  const file = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
+  const file = await fs.readFile(`${publicPath}/output/regen-points.txt`, 'utf-8');
   const lines = file.split('\n');
 
   let pointValue;
@@ -129,7 +130,7 @@ export async function updatePointsFile() {
 export async function getAllPointsSorted() {
   updatePointsFile();
 
-  const file = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
+  const file = await fs.readFile(`${publicPath}/output/regen-points.txt`, 'utf-8');
   const lines = file.split('\n');
 
   return lines
@@ -169,7 +170,7 @@ export async function getAllPointsSorted() {
 // }
 
 // async function addPointsToUser(username, points) {
-//   const res = await fs.readFile('src/public/output/regen-points.txt', 'utf-8');
+//   const res = await fs.readFile(`${publicPath}/output/regen-points.txt`, 'utf-8');
 //   return res
 //     .split('\n')
 //     .map((u) => {
@@ -197,6 +198,6 @@ export async function getAllPointsSorted() {
 //   return content.split('\n').join(',');
 // }
 // const outputing = await addPointsToUser("Belgiska", 23);
-// saveToFile(outputing, "src/public/output/regen-points.txt");
+// saveToFile(outputing, `${publicPath}/output/regen-points.txt`);
 
 // authorize().then(listUsersPoints).catch(console.error);

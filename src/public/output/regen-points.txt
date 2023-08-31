@@ -147,7 +147,7 @@ The Ampere,0
 The Scizor,0
 Thrmy,20
 Thissa,0
-Touchlines,35
+Touchlines,40
 Toxic Grey,0
 Trihard kyle,60
 TugBoatMarsh,0
@@ -173,3 +173,5 @@ W atermelon,0
 GoyaDeIron,5
 iOwl,40
 RomCommunism,10
+Miss elru,5
+Raging nerd,5
