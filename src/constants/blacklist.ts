@@ -1,1 +1,1 @@
-export const BLACKLIST = ['Holy Fiya', 'P lein', 'Thrmy'];
+export const BLACKLIST = ['Holy Fiya', 'P lein', 'Thrmy', 'hankolf'];

@@ -77,7 +77,7 @@ async function listUsersPoints(auth) {
   const sheets = google.sheets({ version: 'v4', auth });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: `${spreadsheetId}`,
-    range: 'Sheet1!A:B'
+    range: 'A:B'
   });
   const rows = res.data.values;
   if (!rows || rows.length === 0) {
@@ -85,6 +85,7 @@ async function listUsersPoints(auth) {
     return;
   }
   const output = rows
+    .filter((row) => row.length > 0)
     .map((row) => {
       return `${row[0]},${row[1]}`;
     })
@@ -100,7 +101,7 @@ async function listUsersPoints(auth) {
 
 export async function getPointsByUsername(username) {
   // First make sure the local coins file is up to date with the spreadsheet (SSOT)
-  updatePointsFile();
+  await updatePointsFile();
 
   const file = await fs.readFile(`${publicPath}/output/regen-points.txt`, 'utf-8');
   const lines = file.split('\n');
@@ -128,17 +129,16 @@ export async function updatePointsFile() {
 }
 
 export async function getAllPointsSorted() {
-  updatePointsFile();
+  await updatePointsFile();
 
   const file = await fs.readFile(`${publicPath}/output/regen-points.txt`, 'utf-8');
-  const lines = file.split('\n');
-
-  return lines
+  const lines = file
+    .split('\n')
     .sort((lineA, lineB) => {
       const [_userA, pointsA] = lineA.split(',');
       const [_userB, pointsB] = lineB.split(',');
 
-      return (pointsB as unknown as number) - (pointsA as unknown as number);
+      return parseInt(pointsB) - parseInt(pointsA);
     })
     .map((line) => {
       const [username, points] = line.split(',');
@@ -147,6 +147,8 @@ export async function getAllPointsSorted() {
         points
       };
     });
+
+  return lines;
 }
 
 //
