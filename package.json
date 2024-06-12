@@ -6,8 +6,14 @@
   "scripts": {
     "build": "tsc --outDir \"out\" --skipLibCheck src/bot.ts",
     "build:local": "tsc --outDir \"out\" --skipLibCheck src/local.ts",
+    "build:clog": "tsc --outDir \"out\" --skipLibCheck src/scripts/local/clog.local.ts",
+    "build:pets": "tsc --outDir \"out\" --skipLibCheck src/scripts/local/pets.local.ts",
+    "build:leaderboards": "tsc --outDir \"out\" --skipLibCheck src/scripts/local/leaderboards.local.ts",
     "start": "npm run build && node out/bot.js",
-    "local": "npm run build:local && node out/local.js"
+    "local": "npm run build:local && node out/local.js",
+    "clog": "npm run build:clog && node out/scripts/local/clog.local.js",
+    "pets": "npm run build:pets && node out/scripts/local/pets.local.js",
+    "leaderboards": "npm run build:leaderboards && node out/scripts/local/leaderboards.local.js"
   },
   "author": "Arthur Callant",
   "license": "UNLICENSED",

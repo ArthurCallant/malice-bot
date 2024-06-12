@@ -29,7 +29,10 @@ async function getMembersColLogs() {
       return await axios
         .get(`https://api.collectionlog.net/collectionlog/user/${username}`)
         .then((res) => {
-          logResults.push({ username, clog: res.data.collectionLog.uniqueObtained });
+          logResults.push({
+            username,
+            pets: res.data.collectionLog.tabs['Other']['All Pets'].items.filter((i) => i.obtained).length
+          });
         })
         .catch((e) => {
           console.log(username, ': ', e.response.data.error);
@@ -47,11 +50,9 @@ async function getMembersColLogs() {
   console.log('```');
   console.log(
     logResults
-      .sort((a, b) => b.clog - a.clog)
+      .sort((a, b) => b.pets - a.pets)
       .slice(0, 25)
-      .map(
-        (r, i) => `${formatDisplayNameForTopTen(i, r.username)}: ${(r.clog + '  collection log slots.').padStart(18)}`
-      )
+      .map((r, i) => `${formatDisplayNameForTopTen(i, r.username)}: ${(r.pets + ' pets.').padStart(9)}`)
       .join('\n')
   );
   console.log('```');

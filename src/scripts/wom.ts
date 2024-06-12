@@ -52,14 +52,14 @@ export async function getTopTen(msg: Message, metric: TopTenMetric) {
       case 'balance':
         const sortedPointsArray = (await getAllPointsSorted())
           .filter((user) => !BLACKLIST.includes(user.username))
-          .slice(0, 10);
+          .slice(0, 25);
         msg.reply(buildMessage(sortedPointsArray, metric));
         break;
       default:
         const memberships = (await womClient.groups.getGroupDetails(GROUP_ID)).memberships;
         const sortedMemberships = sortMembershipsByMetric(memberships, metric)
           .filter((user) => !BLACKLIST.includes(user.player.displayName))
-          .slice(0, 10);
+          .slice(0, 25);
         msg.reply(buildMessage(sortedMemberships, metric));
         break;
     }
